@@ -16,12 +16,12 @@ if [[ ! -d "/dev/serial/by-path/" ]]; then
 	exit 0
 fi
 if [[ "$1" = "-a" ]]; then
-	ports=$(ls -l /dev/serial/by-path/* | grep -P '/[\w]*/tty[\w]*' -o)
+	ports=$(ls -l /dev/serial/by-path/* | grep -P '/[\w.]*/tty[\w]*' -o | sed "s/\.\./dev/gi")
 	IFS=$'\n'
 	for port in $ports ; do
 		echo $port
 	done
 else
-	port=$(ls -l /dev/serial/by-path/* | grep -P '/[\w]*/tty[\w]*' -o | head -1)
+	port=$(ls -l /dev/serial/by-path/* | grep -P '/[\w.]*/tty[\w]*' -o | head -1)
 	echo $port
 fi
