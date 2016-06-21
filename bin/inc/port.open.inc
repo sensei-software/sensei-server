@@ -27,7 +27,8 @@ else
 fi
 
 # Communication init
-stty -F $PORT sane cs8 speed $BAUD_DEFAULT -hupcl raw -echo > /dev/null
+#stty -F $PORT sane cs8 speed $BAUD_DEFAULT -hupcl raw -echo > /dev/null
+stty -F $PORT sane cs8 speed $BAUD_DEFAULT hupcl raw -echo > /dev/null
 exec 7<>$PORT || {
 	>&2 echo "ERROR opening port $PORT (error $?)"
 	exit 1
@@ -47,7 +48,7 @@ else
 			welcomeMsg=$(timeout $LONG_COMMAND_RESPONSE_TIMEOUT cat<&7 | grep "#")
 			if [[ ! "$welcomeMsg" = *[!\ \n]* ]]; then
 				if [[ -z "$WELCOME_MSG_DEFAULT" ]]; then
-					>&2 echo "# Port $PORT ERROR: (0206) got no welcome message on Request."
+					>&2 echo "# Port $PORT ERROR: (0206) got no welcome message on Request ($welcomeMsg)."
 				else
 					echo "# Port $PORT INFO: got no welcome message on Connect. Using default."
 					welcomeMsg="$WELCOME_MSG_DEFAULT"
@@ -64,7 +65,7 @@ else
 	devName=$( echo -e "$welcomeMsg" | grep -P "(?<=SID: )[^\s]+(?=\s)" -o -m 1)
 	if [[ -z "$devId" ]]; then
 		>&2 echo "# Port $PORT ERROR: (0207) no DEV_ID on welcome message."
-		#exit 1
+		exit 1
 	else
 		if [[ -z "$devName" ]]; then
 			>&2 echo "# Port $PORT WARNING: (0218) no DEV_NAME on welcome message."
