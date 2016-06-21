@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#? Sensei Master Restart
+#? ======================
+#? > sensei-master-restart [<PORT>]
+#? 	This script restart Sensei Master, basically launching sensei-stop and sensei-start.
+#? 		<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? 		-f if given as the second argument force killing
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+FORCE_ARG=$2
+
+echo "# Stopping ($FORCE_ARG) SenseiMaster on port $PORT"
+
+echo "Sensei RESTART"
+$DIR/sensei-master-stop $PORT -f
+sleep $SENSEI_MASTER_STOP_TIMEOUT
+$DIR/sensei-master-start $PORT

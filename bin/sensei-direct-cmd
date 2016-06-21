@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Help
+#? Sensei Direct Command
+#? ======================
+#? > sensei-direct-cmd <COMMAND> [<PORT>]
+#? 	Opens a direct connection to a device, sends a command and gives back output.
+#? 		<COMMAND> is given as the first argument.
+#? 		<PORT> is given as the last argument. If omitted sensei-port output is used.
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$2"
+
+CMD=$1
+if [[ -z "$CMD" ]] ; then
+	>&2 echo "ERROR: missing param. <COMMAND> [<PORT>]"
+	exit 1
+fi
+
+# Main
+. $INC_DIR/port.open.inc "$PORT_PATH" >/dev/null
+LOG_FILE=$XDIR/sensei_commands.log
+
+echo ">CMD: $CMD"
+echo "$CMD">&7
+timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "%Y/%m/%d %H:%M:%S - $PORT - $DEV_NAME - $CMD -"| tee -a $LOG_FILE
+. $INC_DIR/port.close.inc "$PORT_PATH" >/dev/null
+echo "."

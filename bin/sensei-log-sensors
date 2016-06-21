@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+logFile="$XDIR/sensei_commands.log"
+while true; do
+	if [[ -f $logFile ]]; then
+		$DIR/tools/incat "$logFile" "SENSEI_LOG_SENSORS" "=.*=.*=" |  sed -r -e 's/([^=]+)=([^<]+)<([^>]+)>([^=]+=)/\1= <\3>/g' >> $LOG_DIR/sensors.log
+	fi
+	sleep  $SENSEI_DB_IMPORT_INTERVAL
+done

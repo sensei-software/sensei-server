@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# input VARS:
+
+#RULE_NAME="TEST Rule"
+#CHECK_FILE="/home/sensei/sensei/sensei-server/logs/sensei_errors.log"
+#CHECK_PATTERN="ERR"
+#REACT_CMD=""
+#REACT_MAILTO="test@test.test"
+
+
+format_template() {
+    changed_str=$1
+
+    for word in $changed_str; do
+        if [[ $word == %*% ]]; then
+            var="${word//\%/}"
+            changed_str="${changed_str//$word/${!var}}"
+        fi
+    done
+    echo "$changed_str"
+}
+
+
+
+if [[ ! -f "$CHECK_FILE" ]]; then
+	>&2 echo "$CHECK_FILE does not exist"
+else
+		matches=$($DIR/tools/incat $CHECK_FILE "$RULE_NAME" "$CHECK_PATTERN")
+		if [[ -z "$matches" ]]; then
+	        	echo "$RULE_NAME: OK! No matches"
+		else
+#			while read match; do
+				matches_n=$(echo -e "$matches" | wc -l)
+	                	echo "$RULE_NAME: WARNING! PATTERN ($CHECK_PATTERN) MATCHES FOUND ($matches_n)"
+				if [[ ! -z "$REACT_CMD" ]]; then
+		                	$(format_template "$REACT_CMD")
+				fi
+				if [[ ! -z "$REACT_MAILTO" ]]; then
+					echo "$RULE_NAME: Sending mail..."
+					echo -e "SenseiReactor '$RULE_NAME': PATTERN ($CHECK_PATTERN) MATCHES FOUND ($matches_n):\n$matches" | mail -s "SenseiReactor '$RULE_NAME': ALARM match FOUND" "$REACT_MAILTO" && echo "$RULE_NAME: Email sent."
+				fi
+#			done <<< "$matches"
+		fi
+		sed -i "s/$RULE_NAME\t$last_offset/$RULE_NAME\t$offset/" $CHECK_FILE.offset
+fi

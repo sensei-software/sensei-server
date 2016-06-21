@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#? Sensei Command
+#? ======================
+#? > sensei-cmd <COMMAND> [<PORT>]
+#?      This script put a command in Sensei Master's command queue
+#?              <COMMAND> is given as the first argument.
+#?              <PORT> is given as the second argument. If omitted PORT_DEFAULT is used.
+#?              it writes into a queue file called:
+#?              >> "sensei_commands.queue"
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$2"
+
+CMD=$1
+if [[ -z "$CMD" ]] ; then
+	>&2 echo "ERROR: missing param. <COMMAND> [<PORT>]"
+	exit 1
+fi
+
+echo "# Received Command $CMD for port $PORT"
+# Check for command specific actions
+if [[ -f "$CONF_DIR/commands/$CMD.queue" ]]; then
+#		echo "User command $CMD"
+	. $CONF_DIR/commands/$CMD.queue
+elif [[ -f "$RES_DIR/base/commands/$CMD.queue" ]]; then
+#		echo "Base command $CMD"
+	. $RES_DIR/base/commands/$CMD.queue
+else
+	#echo "Normal command $CMD"
+	echo $CMD>>$XDIR/sensei_commands.queue
+fi
+echo "# Queued Command $CMD for port $PORT"
+cat $XDIR/sensei_commands.queue |$DIR/tools/ts "# $PORT queue: "
+if [[ ! -f $XDIR/sensei_commands.log ]]; then
+	>$XDIR/sensei_commands.log
+fi
+if [ "$3" != "-b" ]; then
+	timeout $EXT_COMMAND_RESPONSE_TIMEOUT tail -n 0 $XDIR/sensei_commands.log -f | grep "$CMD" | $DIR/tools/ts "# $PORT OUT: "
+fi

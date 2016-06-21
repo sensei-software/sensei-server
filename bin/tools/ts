@@ -1,0 +1,20 @@
+#!/bin/bash
+dateFormat=$1
+if [ -z "$dateFormat" ]; then
+	dateFormat="%Y-%m-%d %H:%M:%S"
+fi
+
+# unbuffered version
+while read line; do
+	dateStamp=$(date +"$dateFormat")
+	echo -e "$dateStamp $line"
+done
+
+# buffered version (cpu high usage)
+
+# strOut=""
+# while read line; do
+#	dateStamp=$(date +"$dateFormat")
+#	strOut="$strOut$dateStamp $line\n"
+# done
+# echo -e "$strOut"

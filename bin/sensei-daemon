@@ -1,0 +1,77 @@
+#!/bin/bash
+
+#? Sensei Daemon
+#? ======================
+#? > sensei-daemon
+#? 	- Watches for USB events and starts/stops device related services
+
+#? Note: Does not support all the USB serial adapter yet (e.g. old arduino)
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+for var in "$@"
+do
+  if [ "$var" == "-c" ]; then	CLEAN_STARTUP="true"
+	fi
+done
+
+. $INC_DIR/daemons.log.inc
+
+trap ">&2 echo 'DAEMON EXIT signal received'; PORTS=\"\$($DIR/sensei-port -a)\"; IFS=$'\n'; for PORT in \$PORTS; do $DIR/sensei-discard-port \"\$PORT\" ; done; $DIR/sensei-kill-all; exit 255" SIGINT SIGTERM SIGKILL
+
+$DIR/tools/incat /var/log/syslog "USB_DISC" "disconnected from tty" -e >/dev/null
+$DIR/tools/incat /var/log/syslog "USB_CONN" "attached to tty" -e >/dev/null
+
+if [[ "$CLEAN_STARTUP" == "true" ]]; then
+	echo "# Clean startup: cleaning dev..."
+	2>/dev/null rm -r $DEV_DIR/*
+  echo "# Clean startup: cleaning TCP symlinks..."
+  ls -l -d -1 /dev/serial/by-path/*.* | grep TCP | tr -s ' ' | cut -d ' ' -f 9 | xargs -r sudo rm
+fi
+if [[ -f "$CONF_DIR/tcp_ports.conf" ]]; then
+  echo "# Attaching TCP ports"
+  while read line;    do
+      (>&3 eval "$DIR/sensei-attach-tcp $line" ) &
+  done <<< "$(cat $CONF_DIR/tcp_ports.conf)"
+fi
+sleep 3
+for PORT in $($DIR/sensei-port -a); do
+	(. $INC_DIR/port.start.inc $PORT) &
+done
+echo "# Starting Db Import..."
+(>&3 $DIR/sensei-db-import) &
+echo "# Starting Db Sync..."
+(>&3 $DIR/sensei-db-sync) &
+echo "# Starting Reactor..."
+(>&3 $DIR/sensei-reactor) &
+echo "# Starting System Monitor..."
+(>&3 $DIR/sensei-system-monitor) &
+
+echo "# Watching for USB events..."
+while true; do
+	# USB DISCONNECTIONS
+	lines="$($DIR/tools/incat /var/log/syslog "USB_DISC" 'disconnected from tty')"
+	if [[ ! -z "$lines" ]]; then
+		for line in $lines ; do
+			PORT_NAME="$(echo $line | grep -oP '(?<=from )tty.*')"
+			echo -e "USB EVENT: $PORT_NAME DISCONNECTED"
+			PORT="/dev/$PORT_NAME"
+			. $INC_DIR/port.stop.inc $PORT
+		done
+	fi
+	# USB CONNECTIONS
+	lines="$($DIR/tools/incat /var/log/syslog "USB_CONN" 'attached to tty')"
+	if [[ ! -z "$lines" ]]; then
+		for line in $lines ; do
+			PORT_NAME="$(echo $line | grep -oP '(?<=to )tty.*')"
+			echo -e "USB EVENT: $PORT_NAME CONNECTED"
+			PORT="/dev/$PORT_NAME"
+			. $INC_DIR/port.start.inc $PORT
+		done
+	fi
+
+	sleep $SENSEI_DAEMON_POLLING_INTERVAL
+
+done

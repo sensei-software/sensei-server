@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#? Sensei Master
+#? ======================
+#? This script basically act as the driver for the device on <PORT>.
+#? 	<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? It uses a "sensei_commands.queue" file that act as a message queue.
+#? 	Everyone can write on the command queue and Sensei Master will execute that command at the next cycle.
+#? It also uses a set of "sensei_commands.scheduled.*" files for scheduled command (NOTE: currently supports scheduled.always only)
+#? it outputs two log files:
+#? 	> "sensei_commands.log" for output of commands coming from the "queue"
+#? 	> "sensei_sensors.log" for output of commands coming from the "scheduled" config, usally sensors data
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+# trap exit signal and save current queues and remove port
+trap '>&2 echo "EXIT signal received"; echo -e "$cmds" >> $TMP_DIR/$DEV_NAME.queue; exit 255' SIGINT SIGTERM SIGKILL
+
+# Main
+. $INC_DIR/port.open.inc "$PORT_PATH"
+
+cmds="" # needs to be initialized for the above trap
+# Import temp queue if exists
+if [[ -f $TMP_DIR/$DEV_NAME.queue ]]; then
+	cat $TMP_DIR/$DEV_NAME.queue >> $XDIR/sensei_commands.queue
+	>$TMP_DIR/$DEV_NAME.queue
+fi
+# Commands loop
+while true; do
+	cmds=$(<$XDIR/sensei_commands.queue)
+	if [[ ! -z "$cmds" ]]; then
+		>$XDIR/sensei_commands.queue
+		while read line;    do
+			COMMAND_LINE_FORMAT="%Y/%m/%d %H:%M:%S = $PORT <$DEV_NAME> $line ="
+			echo ">>>CMD (queue) > $PORT_NAME ($DEV_NAME): $line"
+			case $line in
+			"EXIT")
+				exit_at_end=1
+				echo "EXITING" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+				echo "EXIT command received. Ending queue and exiting"
+			;;
+			*)
+				cmd="$(echo "$line" | cut -d ' ' -f 1)"
+				# Check for command specific actions
+				if [[ -f "$CONF_DIR/commands/$cmd.cmd" ]]; then
+					. $CONF_DIR/commands/$cmd.cmd
+				elif [[ -f "$RES_DIR/base/commands/$cmd.cmd" ]]; then
+					. $RES_DIR/base/commands/$cmd.cmd
+				else
+					echo "$line" >&7
+					timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+				fi
+			;;
+			esac
+		done <<< "$cmds"
+		cmds=""
+		if [[ $exit_at_end -eq "1" ]]; then
+			echo "# SenseiMaster Terminating on $PORT: EXIT command received"
+			. $INC_DIR/port.close.inc $PORT
+			exit 0
+		fi
+	fi
+	$DIR/tools/ssleep $SENSEI_MASTER_SLEEP_INTERVAL
+done

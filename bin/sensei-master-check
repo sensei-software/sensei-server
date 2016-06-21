@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#? Sensei Master Check
+#? ======================
+#? > sensei-master-check [<PORT>]
+#? 	This script check if Sensei Master is running for the device on <PORT>.
+#? 	Check is done by checking if process is running (by process name "sensei-master")
+#? 		<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? 	NOTE: ps filtering should be improved: it could occasionally produce false positives
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+# Main
+echo "# Checking port: $PORT"
+pid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
+if [ -z "$pid" ]; then
+	echo -e "# SenseiMaster NOT RUNNING for $PORT"
+	exit 1
+else
+	echo -e "# SenseiMaster ALIVE for $PORT = PID: $pid"
+	exit 0
+fi

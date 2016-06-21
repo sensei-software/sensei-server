@@ -1,0 +1,11 @@
+#!/bin/bash
+RULE_NAME="Check Light Alarm"
+RULE_TEMPLATE="file-val-under-min"
+SENSOR_NAME="Light_C1>LS3"
+MEASURE="LIGHT"
+MIN_VAL="10"
+REACT_DEVICE="Relays"
+REACT_COMMAND="SPK_BEEP"
+REACT_MAILTO=""
+
+ . $RES_DIR/base/rules/templates/rule.tmpl.$RULE_TEMPLATE

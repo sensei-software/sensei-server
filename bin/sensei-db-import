@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#? Sensei DB Import
+#? ======================
+#? Imports the log files into the Database
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+tmpFilename=$TMP_DIR/sensors_log.tmp
+if [[ -z "$SENSEI_DB_PASS" ]]; then
+	PASS_ARG=""
+else
+	PASS_ARG="-p$SENSEI_DB_PASS"
+fi
+
+while true; do
+	if [[ ! -f $LOG_DIR/sensors.log ]]; then
+		>&2 echo "WARNING: no buffer file"
+	else
+		echo "# DbImport - Import buffer file..."
+		$DIR/tools/incat $LOG_DIR/sensors.log "SENSEI_DB_IMPORT" > $tmpFilename
+		mysqlimport --lock-tables=false --fields-terminated-by="$SENSEI_DB_LOG_SEPARATOR" --host=$SENSEI_DB_HOST -i --local -u $SENSEI_DB_USER $PASS_ARG $SENSEI_DB_NAME $tmpFilename
+	fi
+	sleep  $SENSEI_DB_IMPORT_INTERVAL
+done

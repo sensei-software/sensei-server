@@ -1,0 +1,4 @@
+#!/bin/bash
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+$DIR/sensei-db-values -B -N | grep "$1" | grep "$2" | cut -f 4

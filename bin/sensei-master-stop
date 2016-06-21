@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#? Sensei Master Stop
+#? ======================
+#? > sensei-master-stop [<PORT>] [-f]
+#? 	This script stops Sensei Master, sending EXIT command
+#? 	<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? 	-f if given as the second argument force killing
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+FORCE_ARG=$2
+
+echo "# Stopping ($FORCE_ARG) SenseiMaster on port $PORT"
+pid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
+if [[ ! -z $pid ]]; then
+	if [[ -z "$FORCE_ARG" || "$FORCE_ARG" -ne "-f" ]]; then
+		echo -e "# Trying to send EXIT command to $PORT_NAME queue..."
+		$DIR/sensei-cmd EXIT $PORT  |  awk '{print "\t\t\t" $0; system("")}'
+		echo -e "# EXIT command sent to $PORT_NAME, wait..."
+		$DIR/tools/ssleep $SENSEI_MASTER_STOP_TIMEOUT
+		pid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
+		if [[ ! -z $pid ]]; then
+			echo -e "# WARN SenseiMaster on $PORT_NAME not stopped = PID: $pid"
+			$0 $PORT -f |  awk '{print "\t\t\t\t" $0; system("")}'
+		else
+			echo "# SenseiMaster on $PORT_NAME Closed gracefully"
+		fi
+	else
+		kill -15 $pid
+		$DIR/tools/ssleep $SENSEI_MASTER_STOP_TIMEOUT
+		npid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
+		if [[ ! -z $npid ]]; then
+			>&2 echo "# ERROR SenseiMaster on $PORT_NAME still running (after $SENSEI_MASTER_STOP_TIMEOUT of KILL signal)"
+			exit 902
+		else
+			echo "# WARN SenseiMaster on $PORT_NAME Closed brutally = PID: $pid"
+			exit 901
+		fi
+	fi
+else
+	echo "No running instances."
+fi

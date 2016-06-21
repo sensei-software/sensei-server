@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+echo "killing sensei-* processes"
+pkill sensei-
+echo "killing others"
+killall tee 2>/dev/null
+killall tail 2>/dev/null
+killall highlight 2>/dev/null
+echo "End."

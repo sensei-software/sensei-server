@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#? Sensei Scheduler
+#? ======================
+#? Manage scheduled commands for specified port
+#? 	<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? It currently imports the "sensei_commands.scheduled.always" file into the sensei_commands.queue.
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+while true; do
+	for CMD in $(cat $XDIR/sensei_commands.scheduled.always); do
+		$DIR/sensei-cmd "$CMD" "$PORT" -b
+	done
+	sleep $SCHEDULED_ALWAYS_INTERVAL
+done

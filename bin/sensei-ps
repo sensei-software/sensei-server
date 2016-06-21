@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Argument Parsing
+for var in "$@"
+do
+  if [ "$var" == "-m" ]; then	ONLY_MAIN_PROCESS="true"
+	elif [ "$var" == "-p" ]; then	OUTPUT_ONLY_PID="true"
+	elif [ ! -z "$var" ]; then 	PROCESS_NAME="$var"
+	fi
+done
+if [ -z "$ONLY_MAIN_PROCESS" ]; then ONLY_MAIN_PROCESS=""; fi
+
+all_procs=$(ps f -fA | grep -P ".*/sensei-.*\$" -o | grep -v 'sensei-ps' | grep -v 'grep' | grep -v '_ tee')
+out_procs="$all_procs"
+# TODO: verify ONLY_MAIN_PROCESS across platforms
+if [ ! -z "$ONLY_MAIN_PROCESS" ]; then	out_procs=$(echo -e "$out_procs" | tr -s ' ' | grep -P '\w*\s\d*\s1\s'); fi
+if [ ! -z "$PROCESS_NAME" ]; then out_procs=$(echo -e "$out_procs" | tr -s ' ' | grep "$PROCESS_NAME"); fi
+if [ ! -z "$OUTPUT_ONLY_PID" ]; then out_procs=$(echo -e "$out_procs" | tr -s ' ' | cut -d ' ' -f2); fi
+echo -e "$out_procs"

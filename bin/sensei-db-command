@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#? Sensei DB Command
+#? ======================
+#? Execute the command given as argument
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+tmpFilename=$TMP_DIR/sensors_log.tmp
+if [[ -z "$SENSEI_DB_PASS" ]]; then
+	PASS_ARG=""
+else
+	PASS_ARG="-p$SENSEI_DB_PASS"
+fi
+
+mysql -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG -e "$1" $2 $3

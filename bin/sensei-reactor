@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+ . $INC_DIR/daemons.log.inc
+
+echo "# Reactor - Loading reactions"
+ruleFiles=$(ls -d -1  $CONF_DIR/rules/*.active)
+for ruleFile in $ruleFiles ; do
+			fileName=$(basename $ruleFile)
+			echo "# Reactor - Loading rule: $fileName"
+			$DIR/sensei-reactor-rule $CONF_DIR/rules/$fileName &
+			sleep  $SENSEI_REACTOR_INTERVAL
+done

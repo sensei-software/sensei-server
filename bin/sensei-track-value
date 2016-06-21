@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#? Sensei Scheduler
+#? ======================
+#? Manage scheduled commands for specified port
+#? 	<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
+#? It currently imports the "sensei_commands.scheduled.always" file into the sensei_commands.queue.
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+name="$1"
+val="$2"
+# Creating execution record
+a=''\''"\;:#[]{}()|&^$@!?, .<>abc123'
+printf -v s_name "%q" "$name"
+printf -v s_val "%q" "$val"
+
+sql="INSERT INTO sensors_log(EventTime,SensorName,SensorValue) VALUES (NOW(),'$s_name',$s_val);"
+
+$DIR/sensei-db-command "$sql"
+echo "SenseiTrack - inserted $name = $val"

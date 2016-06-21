@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Help
+#? Sensei Discover
+#? ======================
+#? > sensei-discover [PORT]
+#?      Polls PORT trying to find Sensei Devices
+#?      If a Sensei Device is found, a symlink to the corresponding port is created
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+# trap exit signal and save current queues and remove port
+trap ">&2 echo 'EXIT signal received'; exit 255" SIGINT SIGTERM SIGKILL
+
+# Main
+. $INC_DIR/port.open.inc "$PORT_PATH" #>/dev/null
+
+devId="$DEV_ID"
+devName="$DEV_NAME"
+
+if [[ -z "$devName" ]]; then
+	>&2 echo "# WARNING: no device found on port $PORT"
+	exit 0
+else
+	echo "# Discovered $PORT (OK). Model: <$devId> SID: '$devName'"
+	#Creating symlink
+	if [ -L $DEV_DIR/$devName ]; then rm $DEV_DIR/$devName; fi
+	ln -s $PORT_NAME $DEV_DIR/$devName
+	#Filling commands, name and model files
+	echo "# $PORT <$devId> Getting dev info"
+#	$DIR/sensei-named-direct-cmd "?" "$devName" | grep "? =" | sed  "s/.*? = [0-9]\+ - //" > $DIR/dev/$devName/sensei.commands
+#	echo -e "?\n" >&7 && timeout $ cat <&7 | grep "? ="
+#	set +e
+	commands="$(echo -e '?\n' >&7 && timeout $LONG_COMMAND_RESPONSE_TIMEOUT cat <&7 | sed  's/.*[0-9]\+ - //' | tee $DEV_DIR/$devName/sensei.commands)"
+	if [[ -z "$commands" ]] ; then
+		echo "WARNING: no commands on Request (retry 1)"
+		commands="$(echo -e '?\n' >&7 && timeout $LONG_COMMAND_RESPONSE_TIMEOUT cat <&7 | sed  's/.*[0-9]\+ - //' | tee $DEV_DIR/$devName/sensei.commands)"
+	fi
+	if [[ -z "$commands" ]] ; then
+		>&2 echo "WARNING: no commands list received (after 1 retries)"
+	else
+		echo "OK: Command list received."
+		echo -e "$commands" | tr -s '\r\n' ','
+	fi
+
+	echo "$devName" > $DEV_DIR/$devName/sensei.name
+	echo "$devId" > $DEV_DIR/$devName/sensei.model
+	. $INC_DIR/port.close.inc "$PORT_PATH" >/dev/null
+
+fi
+exit 0

@@ -1,0 +1,11 @@
+#!/bin/bash
+RULE_NAME="Check Light Relay"
+RULE_TEMPLATE="file-val-threshold"
+SENSOR_NAME="UnoSensors>LS3"
+MEASURE="LIGHT"
+THRESHOLD="10"
+REACT_DEVICE="RelaysWifi"
+REACT_COMMANDS="REL_ON 1|REL_OFF 1"
+REACT_MAILTO=""
+
+ . $RES_DIR/base/rules/templates/rule.tmpl.$RULE_TEMPLATE

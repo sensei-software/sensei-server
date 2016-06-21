@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Help
+#? Sensei Discover
+#? ======================
+#? > sensei-discover [PORT]
+#?      Polls PORT trying to find Sensei Devices
+#?      If a Sensei Device is found, a symlink to the corresponding port is created
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+# Main
+echo "# Discarding port $PORT"
+devName="$(cat $XDIR/sensei.name 2>/dev/null)"
+if [[ -z "$devName" ]]; then
+	echo "# No alias found for port $PORT"
+else
+	echo "# Removing alias '$devName' for port $PORT"
+	#Removing symlink
+	if [ -L $DEV_DIR/$devName ]; then rm $DEV_DIR/$devName; fi
+fi
+if [[ -d $XDIR ]]; then
+	echo "# Removing working dir for port $PORT"
+	rm -r $XDIR
+fi
+exit 0

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Help
+#? Sensei Discover
+#? ======================
+#? > sensei-discover [PORT]
+#?      Polls PORT trying to find Sensei Devices
+#?      If a Sensei Device is found, a symlink to the corresponding port is created
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+. $INC_DIR/daemons.log.inc
+
+#Removing all symlinks
+if [[ -d $DEV_DIR ]]; then
+	links=$(find $DEV_DIR/ -maxdepth 1 -type l -ls |  sed -r "s/.*\s(\w*\/.+) ->.*/\1/g")
+	for link in $links ; do
+		rm $link
+	done
+fi
+
+echo "# Discovering sensei devices attached"
+echo "# Please wait..."
+echo "#####################################"
+OUT=""
+PORTS=$($DIR/sensei-port -a)
+for PORT in $PORTS ; do
+	echo "# Discovering port $PORT"
+	PORT_OUT="$($DIR/sensei-discover-port $PORT)"
+	>&3 echo -e "$PORT_OUT"
+	OUT="$OUT $PORT_OUT"
+done
+echo "#####################################"
+res="$(echo -e "$OUT" | grep -Po '(# Discovered .*)')"
+echo -e "$res"
+echo "#####################################"
+sleep 1
+exit 0

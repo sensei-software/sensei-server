@@ -1,0 +1,8 @@
+#!/bin/bash
+inQueue=$(grep "GET" $XDIR/sensei_commands.queue)
+if [ -z "$inQueue" ]; then
+  echo "GET queue sending"
+  echo $CMD>>$XDIR/sensei_commands.queue
+else
+  echo "GET queue ignored"
+fi

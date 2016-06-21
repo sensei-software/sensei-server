@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+if [[ -z "$1" ]]; then
+	echo "Resetting all ports"
+	PORTS=$($DIR/sensei-port -a)
+	for PORT in $PORTS ; do
+		echo "Resetting port $PORT"
+		$DIR/sensei-usb-reset $PORT
+	done
+	exit 0
+fi
+
+USBRESET="$DIR/tools/usbreset"
+
+DEV=$(echo /dev/bus/usb/`udevadm info --name=$PORT_ARG --attribute-walk | sed -n 's/\s*ATTRS{\(\(devnum\)\|\(busnum\)\)}==\"\([^\"]\+\)\"/\4/p' | head -n 2 | awk '{$1 = sprintf("%03d", $1); print}'` | tr " " "/")
+
+echo "Sensei Usb Reset"
+RESET_CMD="$USBRESET $DEV"
+echo ">$RESET_CMD"
+bash -c "$RESET_CMD"

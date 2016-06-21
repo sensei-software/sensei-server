@@ -1,0 +1,107 @@
+#!/bin/bash
+
+DIR=${0%/*}
+TMP_DIR="/tmp/incat"
+# Global INCAT_TMP_DIR override TMP_DIR
+if [[ ! -z "$INCAT_TMP_DIR" ]]; then
+	TMP_DIR="$INCAT_TMP_DIR"
+fi
+# Argument Parsing
+CHECK_FILE="$1"
+RULE_NAME="incat"
+if [[ ! -z "$2" ]]; then RULE_NAME="$2"; fi
+CHECK_PATTERN="[^\s]+"
+if [[ ! -z "$3" ]]; then CHECK_PATTERN="$3"; fi
+
+for var in "$@"
+do
+	if [ "$var" == "-r" ]; then
+		RESET_OFFSET="true"
+  fi
+	if [ "$var" == "-e" ]; then
+		END_OFFSET="true"
+  fi
+done
+
+
+# Check if file exists
+if [[ ! -f "$CHECK_FILE" ]]; then
+	>&2 echo "$CHECK_FILE does not exist"
+	exit 1
+fi
+# Check if tmp dir exists or make it
+if [[ ! -d "$TMP_DIR" ]]; then
+	mkdir $TMP_DIR
+fi
+if [[ ! -d "$TMP_DIR" ]]; then
+	>&2 echo "Cannot create temporary dir $TMP_DIR"
+	exit 2
+fi
+
+# Calculate offset file name
+FILE_HASH=$(echo "$CHECK_FILE" | md5sum  | cut -d ' ' -f 1)
+FILE_NAME=$(basename $CHECK_FILE)
+OFFSET_FILE="$TMP_DIR/$FILE_NAME.$FILE_HASH.offset"
+# echo "OFFSET file: $OFFSET_FILE"
+
+# Check if Reset Offset mode
+if [[ ! -z "$RESET_OFFSET" ]]; then
+	echo "cleaning OFFSET"
+	if [[ -f "$OFFSET_FILE" ]]; then
+		echo "OFFSET reset"
+		rm "$OFFSET_FILE"
+	fi
+	exit 0
+fi
+# Check if offset file exists
+if [[ ! -f "$OFFSET_FILE" ]]; then
+	touch "$OFFSET_FILE"
+fi
+
+# Load last offset
+last_offset=$(cat $OFFSET_FILE | grep -P "^$RULE_NAME\t" | cut -f2)
+if [[ -z "$last_offset" ]]; then
+	last_offset="0"
+	echo -e "$RULE_NAME\t0" >> $OFFSET_FILE
+fi
+# Check if End Offset mode
+if [[ ! -z "$END_OFFSET" ]]; then
+	echo "setting END OFFSET"
+	if [[ -f "$OFFSET_FILE" ]]; then
+		offset=$(stat -c %s "$CHECK_FILE")
+		sed -i "s/$RULE_NAME\t$last_offset/$RULE_NAME\t$offset/" $OFFSET_FILE
+		echo "END OFFSET set"
+	fi
+	exit 0
+fi
+
+# Make a temp snapshot of the file
+SNAP=$($DIR/snap "$CHECK_FILE" "tmp" "$TMP_DIR")
+
+offset=$(wc --bytes $SNAP | cut -d ' ' -f1)
+#	echo "Last OFFSET: $last_offset"
+#	echo "Current OFFSET: $offset"
+
+# Checking for file truncation
+if [[ "$offset" -lt "$last_offset" ]]; then
+#	echo "$RULE_NAME: INFO: file truncation detected, resetting offset"
+	sed -i "s/$RULE_NAME\t$last_offset/$RULE_NAME\t0/" $OFFSET_FILE
+	last_offset="0"
+fi
+# File has changesd, check for patterns
+if [[ "$offset" -gt "$last_offset" ]]; then
+	matches=$(tail -c +$last_offset "$SNAP" | grep -ia -P "$CHECK_PATTERN")
+	if [[ -z "$matches" ]]; then
+#        	echo "(no matches)"
+		:
+	else
+		matches_n=$(echo -e "$matches" | wc -l)
+#		echo "($RULE_NAME #$matches_n found)"
+		echo -e "$matches"
+	fi
+	sed -i "s/$RULE_NAME\t$last_offset/$RULE_NAME\t$offset/" $OFFSET_FILE
+else
+#	echo "(unchanged)"
+	:
+fi
+rm "$SNAP"

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# grep_line=$(echo "$1"  | sed 's/>/\.\*/g')
+if [[ -z $2 ]]; then
+  measure="$1"
+  device=""
+  sensor=""
+else
+  device=$(echo "$1" | cut -d '>' -f 1)
+  sensor=$(echo "$1" | cut -d '>' -f 2)
+  measure="$2"
+fi
+last_line=$($DIR/tools/incat $LOG_DIR/sensors.log "FILE_VAL-$device-$sensor-$measure" "$device.*$measure.*$sensor"  | tail -n 1)
+last_val=$( echo "$last_line" | cut -d '=' -f 3 | tr -d " :blank:\n\r")
+last_val_d=$( echo "$last_line" | cut -d '=' -f 1 | sed s/\s$// )
+#echo -e $last_line
+if date -d "$last_val_d" >/dev/null; then last_val_s=$(date -d "$last_val_d" '+%s'); else last_val_s=1; fi
+now_s=$(date '+%s')
+elapsed=$(( $now_s-$last_val_s ))
+
+if [ $elapsed -gt $SENSEI_FILE_VALUE_INTERVAL ]; then
+  echo >&2 "(no data)"
+else
+  echo "$last_val"
+fi

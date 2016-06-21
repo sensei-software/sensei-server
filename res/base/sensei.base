@@ -1,0 +1,79 @@
+#!/bin/bash
+# This file contains the default values and should not be edited.
+# Edit sensei.conf instead to override default values..
+
+# Paths
+BIN_DIR=${0%/*}
+BASE_DIR="$BIN_DIR/../"
+INC_DIR="$BIN_DIR/inc"
+CONF_DIR="$BASE_DIR/conf"
+DEV_DIR="$BASE_DIR/dev"
+RES_DIR="$BASE_DIR/res"
+LOG_DIR="$BASE_DIR/logs"
+TMP_DIR="$BASE_DIR/tmp"
+DIR="$BIN_DIR"
+
+export INCAT_TMP_DIR="$TMP_DIR/incat"
+
+# Base Configs
+SENSEI_VERSION="0.7.0a"
+DEBUG_MODE="off"
+# Communication settings
+BAUD_DEFAULT=9600
+
+# Welcome Message
+PORT_RAW_OPEN=""  # if not empy, welcome message is not used
+WELCOME_MSG_DEFAULT_MODEL="UnknownModel"
+WELCOME_MSG_DEFAULT_SID="UnknownDevice_$(cat /proc/sys/kernel/random/uuid)"
+WELCOME_MSG_DEFAULT="# DEV: $WELCOME_MSG_DEFAULT_MODEL - SID: $WELCOME_MSG_DEFAULT_SID " # if set, is used whe no wlcmsg is provided
+WELCOME_MSG_BOOT_WAIT=3
+WELCOME_MSG_REQ_WAIT=3
+
+# Command Response
+COMMAND_RESPONSE_TIMEOUT=0.5
+LONG_COMMAND_RESPONSE_TIMEOUT=3
+EXT_COMMAND_RESPONSE_TIMEOUT=2
+
+# Daemon settings
+SENSEI_DAEMON_POLLING_INTERVAL=1
+
+# Scheduler settings
+SCHEDULED_ALWAYS_INTERVAL=0.5
+
+# Database settings
+SENSEI_DB_HOST="localhost"
+SENSEI_DB_NAME="sensei"
+SENSEI_DB_USER="sensei"
+SENSEI_DB_PASS=""
+SENSEI_DB_LOG_SEPARATOR="="
+SENSEI_DB_IMPORT_INTERVAL=1
+SENSEI_DB_SYNC_INTERVAL=10
+
+# USB settings
+USB_CONN_WAIT=1
+USB_AFTER_RESET_WAIT=2
+
+# Master
+SENSEI_MASTER_SLEEP_INTERVAL=0.5
+SENSEI_MASTER_STOP_TIMEOUT=3
+
+# Values lifetime
+SENSEI_FILE_VALUE_INTERVAL=10
+SENSEI_DB_VALUE_INTERVAL=10
+
+# Reactor
+SENSEI_REACTOR_INTERVAL=1
+REACTOR_NODATA_RETRY_ATTEMPTS=3
+REACTOR_NODATA_RETRY_WAIT=1
+
+# System monitor
+SENSEI_SYSTEM_MONITOR_INTERVAL=5
+
+# REL_SAFE
+REL_SAFE_ATTEMPTS_RESET=3
+
+# Common inclusions
+. $INC_DIR/sensei.common.inc
+
+# User defined configs
+. $CONF_DIR/sensei.conf

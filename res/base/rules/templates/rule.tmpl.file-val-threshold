@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# input VARS:
+# RULE_NAME
+# SENSOR_NAME
+# MEASURE
+# THRESHOLD
+# REACT_DEVICE
+# REACT_COMMANDS
+# REACT_MAILTO
+
+REACT_COMMAND_LOW=$(echo "$REACT_COMMANDS" | cut -d "|" -f 1)
+REACT_COMMAND_HIGH=$(echo "$REACT_COMMANDS" | cut -d "|" -f 2)
+
+lastval=""
+attempts=0
+while [ "$attempts" -lt "$REACTOR_NODATA_RETRY_ATTEMPTS" ]; do
+	{
+		lastval=$($DIR/sensei-file-value "$SENSOR_NAME" "$MEASURE" 2>&1)
+	} || {
+		lastval="NULL"
+	}
+	if [[ ! -z "$lastval" && ! "$lastval" = "NULL" && ! "$lastval" = "(no data)" ]]; then
+		# If read a value, exit
+		break;
+	fi
+	let attempts=attempts+1
+ 	 echo "$RULE_NAME: WARNING no data for $SENSOR_NAME->$MEASURE retrying ($attempts)..."
+	sleep $REACTOR_NODATA_RETRY_WAIT
+done
+if [[ -z "$lastval" || "$lastval" = "NULL" || "$lastval" = "(no data)" ]]; then
+        >&2 echo "$RULE_NAME: ERROR no data for $SENSOR_NAME->$MEASURE ($attempts attempts)"
+else
+        if [[ $(echo "$lastval < $THRESHOLD" | bc -l) = 1 ]]; then
+                RESP="$RULE_NAME: INFO: Value ($lastval) under threeshold ($THRESHOLD)"
+								REACT_COMMAND="$REACT_COMMAND_LOW"
+								REACT_COMMAND_OPP="$REACT_COMMAND_HIGH"
+        else
+                RESP="$RULE_NAME: INFO: Value ($lastval) OVER threeshold ($THRESHOLD)"
+								REACT_COMMAND="$REACT_COMMAND_HIGH"
+								REACT_COMMAND_OPP="$REACT_COMMAND_LOW"
+				fi
+				echo $RESP
+				if [[ ! -z "$REACT_DEVICE" && ! -z "$REACT_COMMAND" ]]; then
+								lastCmdLine=$(grep -n "$REACT_COMMAND" $DEV_DIR/$REACT_DEVICE/sensei_commands.log  | cut -f 1 | tail -n 1 | cut -d ':' -f 1 | tr -d ' ' )
+								lastCmdOppLine=$(grep -n "$REACT_COMMAND_OPP" $DEV_DIR//$REACT_DEVICE/sensei_commands.log  | cut -f 1 | tail -n 1 | cut -d ':' -f 1 | tr -d ' ' )
+							#	echo "Last Cmd n: $lastCmdLine"
+							#	echo "Last CmdOpp n: $lastCmdOppLine"
+								if [[ -z "$lastCmdLine" || "$lastCmdOppLine" -gt "$lastCmdLine" || "$lastCmdLine" -eq 0 ]]; then
+									echo " REACTION: $REACT_DEVICE>$REACT_COMMAND"
+		            	$DIR/sensei-cmd "$REACT_COMMAND" "$REACT_DEVICE" #2>&1 >/dev/null
+								fi
+				fi
+				if [[ ! -z "$REACT_MAILTO" ]]; then
+					echo "$RULE_NAME: Sending mail..."
+					echo "SenseiReactor: $RESP" | mail -s "SenseiReactor '$RULE_NAME': $lastval/$THRESHOLD" "$REACT_MAILTO" && echo "$RULE_NAME: Email sent."
+				fi
+fi

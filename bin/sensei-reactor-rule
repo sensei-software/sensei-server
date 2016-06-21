@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+ . $INC_DIR/daemons.log.inc
+
+ruleFile="$1"
+while true; do
+		echo "# Reactor - Executing RuleFile: $fileName"
+		. $ruleFile
+		sleep  $SENSEI_REACTOR_INTERVAL
+done

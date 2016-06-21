@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#? Sensei DB Command
+#? ======================
+#? Execute the command given as argument
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+mysql -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG < $1

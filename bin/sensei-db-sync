@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#? Sensei DB Import
+#? ======================
+#? Imports the log files into the Database
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+while true; do
+	echo "# DbSync - Purging not valid values..."
+	$DIR/sensei-db-command-file $RES_DIR/db/run/purge_invalid.sql
+	echo "$RES_DIR/db/run/purge_invalid.sql"
+	echo "# DbSync - Cleaning old values...."
+	$DIR/sensei-db-command-file $RES_DIR/db/run/purge_old.sql
+	echo "# DbSync - Updating calendar table for seconds...."
+	$DIR/sensei-db-command "CALL fill_calendar_s(ADDDATE(NOW(), INTERVAL -120 SECOND), NOW()) "
+	echo "# DbSync - Updating calendar table for minutes...."
+	$DIR/sensei-db-command "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -5 MINUTE), NOW()) "
+	echo "# DbSync - Updating calendar table for hours...."
+	$DIR/sensei-db-command "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL - 2 HOUR), NOW()) "
+	echo "# DbSync - Updating calendar table for days...."
+	$DIR/sensei-db-command "CALL fill_calendar_d(ADDDATE(NOW(), INTERVAL - 2 DAY), NOW()) "
+	echo "# DbSync - Aggregating sensor_values_m...."
+	$DIR/sensei-db-command "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( ) - INTERVAL 3 MINUTE)+0) AND  DateField<((NOW( ) - INTERVAL 1 MINUTE)+0)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit "
+	echo "# DbSync - Aggregating sensor_values_h...."
+	$DIR/sensei-db-command "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( ) - INTERVAL 3 HOUR)+0) AND  DateField<((NOW( ) - INTERVAL 1 HOUR)+0)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit "
+
+	echo "# DbSync - Waiting...."
+	sleep  $SENSEI_DB_SYNC_INTERVAL
+done

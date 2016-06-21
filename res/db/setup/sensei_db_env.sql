@@ -1,0 +1,6 @@
+CREATE DATABASE sensei;
+CREATE USER 'sensei'@'localhost' IDENTIFIED BY '' ;
+FLUSH PRIVILEGES;
+GRANT USAGE ON * . * TO 'sensei'@'localhost' IDENTIFIED BY '' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;
+GRANT ALL PRIVILEGES ON `sensei\_%` . * TO 'sensei'@'localhost';
+GRANT ALL PRIVILEGES ON `sensei` . * TO 'sensei'@'localhost' WITH GRANT OPTION ;

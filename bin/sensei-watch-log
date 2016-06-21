@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+FILTER=$1
+if [ -z "$FILTER" ]; then FILTER="."; fi
+
+shopt -s expand_aliases
+alias hl="$DIR/tools/highlight"
+
+tail -f $LOG_DIR/sensei.log \
+	| grep --line-buffered -P "$FILTER" \
+	| hl red "ERROR\|ERR\|KILL\|kill" \
+	| hl yellow "WARNING\|WARN\|RESTART\|ttyUSB" \
+	| hl blue "DEBUG" \
+	| hl green "INFO" \
+	| hl white "OK\|ttyUSB0" \
+	| hl cyan "FREEZE\|ttyACM" \
+	| hl magenta "EXIT" \
+	| hl black "#ROOT#\|#ND#" \

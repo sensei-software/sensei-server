@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Help
+#? Sensei Discover
+#? ======================
+#? > sensei-discover [PORT]
+#?      Polls PORT trying to find Sensei Devices
+#?      If a Sensei Device is found, a symlink to the corresponding port is created
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+IP=$1
+TCP_PORT=$2
+SERIAL_PORT=$3
+
+# Main
+echo "# Attaching TCP port $IP:$TCP_PORT as $SERIAL_PORT"
+
+if [[ -f /dev/serial/by-path/$IP-$TCP_PORT ]]; then
+	echo "# Removing symlink"
+	sudo rm /dev/serial/by-path/$IP-$TCP_PORT
+fi
+
+socat -d -v -x pty,link=/tmp/$SERIAL_PORT,mode=777,echo=0,raw tcp:$IP:$TCP_PORT &
+
+if [[ ! -d /dev/serial/by-path/ ]]; then
+	if [[ ! -d /dev/serial/by-path/ ]]; then
+		echo "Creating /dev/serial"
+		sudo mkdir /dev/serial/
+	fi
+	echo "Creating /dev/serial/by-path/"
+	sudo mkdir /dev/serial/by-path/
+fi
+ln -s /tmp/$SERIAL_PORT /dev/serial/by-path/$IP-$TCP_PORT
+echo "#Link created"
+ls -l /tmp/$SERIAL_PORT 
+ls -l /dev/serial/by-path/$IP-$TCP_PORT
+

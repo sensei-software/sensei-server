@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+2>/dev/null rm -r $LOG_DIR/*
+2>/dev/null rm -r $DEV_DIR/*
+2>/dev/null rm -r $TMP_DIR/*

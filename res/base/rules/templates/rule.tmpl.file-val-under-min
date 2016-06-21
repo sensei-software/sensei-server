@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# input VARS:
+
+# RULE_NAME
+# SENSOR_NAME
+# MEASURE
+# MIN_VAL
+# REACT_DEVICE
+# REACT_COMMAND
+# REACT_MAILTO
+
+lastval=""
+attempts=0
+while [ "$attempts" -lt "$REACTOR_NODATA_RETRY_ATTEMPTS" ]; do
+        {
+                lastval=$($DIR/sensei-file-value "$SENSOR_NAME" "$MEASURE" 2>&1)
+        } || {
+                lastval="NULL"
+        }
+        if [[ ! -z "$lastval" && ! "$lastval" = "NULL" && ! "$lastval" = "(no data)" ]]; then
+                # If read a value, exit
+                break;
+        fi
+        let attempts=attempts+1
+         echo "$RULE_NAME: WARNING no data for $SENSOR_NAME->$MEASURE retrying ($attempts)..."
+        sleep $REACTOR_NODATA_RETRY_WAIT
+done
+if [[ -z "$lastval" || "$lastval" = "NULL" || "$lastval" = "(no data)" ]]; then
+        >&2 echo "$RULE_NAME: ERROR no data for $SENSOR_NAME->$MEASURE ($attempts attempts)"
+else
+        if [[ $(echo "$lastval > $MIN_VAL" | bc -l) = 1 ]]; then
+                echo "$RULE_NAME: OK! Value ($lastval) over threeshold ($MIN_VAL)"
+        else
+                >&2 echo "$RULE_NAME: WARNING! VALUE ($lastval) UNDER threeshold ($MIN_VAL)"
+		if [[ ! -z "$REACT_DEVICE" && ! -z "$REACT_COMMAND" ]]; then
+                	$DIR/sensei-cmd "$REACT_COMMAND" "$REACT_DEVICE"
+		fi
+		if [[ ! -z "$REACT_MAILTO" ]]; then
+			echo "$RULE_NAME: Sending mail..."
+			echo "SenseiReactor '$RULE_NAME': VALUE $lastval UNDER threeshold $MAX_VAL" | mail -s "SenseiReactor '$RULE_NAME': ALARM ($lastval)" "$REACT_MAILTO" && echo "$RULE_NAME: Email sent."
+		fi
+        fi
+fi

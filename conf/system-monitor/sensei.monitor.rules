@@ -1,0 +1,33 @@
+#!/bin/bash
+
+cpus=$(grep -c ^processor /proc/cpuinfo)
+name="<System> CPU_LOAD (CPU) [] {$cpus}"
+val="$(cat /proc/loadavg | cut -d ' ' -f 1)"
+$DIR/sensei-track-value "$name" "$val"
+
+name="<System> CPU_USAGE (CPU) [] {%}"
+val="$(top -bn 1 | awk '{print $9}' | tail -n +8 | awk '{s+=$1} END {print s}')"
+$DIR/sensei-track-value "$name" "$val"
+
+cpus=$(grep -c ^processor /proc/cpuinfo)
+name="<System> SENSEI_PROCS (CPU) [] {$cpus}"
+val="$(top -b -n 1 | grep sensei | wc -l)"
+$DIR/sensei-track-value "$name" "$val"
+
+name="<System> USED_SPACE_ROOT (FS) [rootfs] {%}"
+val="$(df | grep root | tr -s ' ' | cut -d ' ' -f 5 | sed 's/%//g')"
+$DIR/sensei-track-value "$name" "$val"
+
+#name="<System> TX_RATE_WLAN0 (NET) [wlan0] {bs}"
+#old_val="$(cat /proc/net/dev | grep wlan0 | tr -s ' ' | cut -d ' ' -f 11)"
+#sleep 1
+#val="$(cat /proc/net/dev | grep wlan0 | tr -s ' ' | cut -d ' ' -f 11)"
+#val=$(echo "$val" - "$old_val" | bc )
+#$DIR/sensei-track-value "$name" "$val"
+
+#name="<System> RX_RATE_WLAN0 (NET) [wlan0] {bs}"
+#old_val="$(cat /proc/net/dev | grep wlan0 | tr -s ' ' | cut -d ' ' -f 3)"
+#sleep 1
+#val="$(cat /proc/net/dev | grep wlan0 | tr -s ' ' | cut -d ' ' -f 3)"
+#val=$(echo "$val" - "$old_val" | bc )
+#$DIR/sensei-track-value "$name" "$val"
