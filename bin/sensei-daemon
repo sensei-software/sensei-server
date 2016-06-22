@@ -40,8 +40,8 @@ sleep 3
 for PORT in $($DIR/sensei-port -a); do
 	(. $INC_DIR/port.start.inc $PORT) &
 done
-echo "# Starting Db Import..."
-(>&3 $DIR/sensei-db-import) &
+#echo "# Starting Db Import..."
+#(>&3 $DIR/sensei-db-import) &
 echo "# Starting Db Sync..."
 (>&3 $DIR/sensei-db-sync) &
 echo "# Starting Reactor..."
