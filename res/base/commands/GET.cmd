@@ -19,7 +19,7 @@ if [ $elapsed -ge $GET_cache_time ]; then
 	while read resp_line; do
 		measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
 		value="$(echo $resp_line | sed 's/.*= \(.*\)/\1/gi' )"
-		echo "$DIR/sensei-track-value \"$measure\" \"$value\""
+		$DIR/sensei-track-value \"$measure\" \"$value\"
 		echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 	done <<< "$resp"
 else
