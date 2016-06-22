@@ -19,8 +19,12 @@ if [ $elapsed -ge $GET_cache_time ]; then
 	while read resp_line; do
 		measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
 		value="$(echo $resp_line | sed 's/.*= \([0-9.]*\).*/\1/gi' )"
-		$DIR/sensei-track-value "$measure" "$value"
-		echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+		if ! [[ $value =~ '^[0-9]+$' ]] ; then
+			 echo "error: Not a number ($value)" >&3;
+		else
+			$DIR/sensei-track-value "$measure" "$value"
+			echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+		fi
 	done <<< "$resp"
 else
   echo "GET ignored $elapsed  $last_val_s"
