@@ -14,9 +14,10 @@ elapsed=$(( $now_s-$last_val_s ))
 
 if [ $elapsed -ge $GET_cache_time ]; then
   echo "GET sending $elapsed $last_val_s"
+	echo "$line" >&7
 	resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
 	while read resp_line; do
-		measure="$(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
+		measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
 		value="$(echo $resp_line | sed 's/.*= \(.*\)/\1/gi' )"
 		echo "$DIR/sensei-track-value \"$measure\" \"$value\""
 		echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
