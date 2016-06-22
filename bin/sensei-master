@@ -56,7 +56,7 @@ while true; do
 					resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
 					measure="$(echo $resp | sed 's/\(.*\) =.*/\1/gi' )"
 					value="$(echo $resp | sed 's/.*= \(.*\)/\1/gi' )"
-					$DIR/sensei-track-value "$device>$measure" "$value"
+					$DIR/sensei-track-value "$measure" "$value"
 					echo "$resp" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 				fi
