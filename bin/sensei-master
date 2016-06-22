@@ -52,7 +52,13 @@ while true; do
 					. $RES_DIR/base/commands/$cmd.cmd
 				else
 					echo "$line" >&7
-					timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+					#timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+					resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
+					device="(echo $resp | sed 's/<\(.*\)>.*/\1/gi' )"
+					measure="(echo $resp | sed 's/.*> \(.*\) (.*/\1/gi' )"
+					value="(echo $resp | sed 's/.*= \(.*\)/\1/gi' )"
+					$DIR/sensei-track-value "$device>$measure $value"
+					echo "$resp" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 				fi
 			;;

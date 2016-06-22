@@ -1,10 +1,12 @@
 #!/bin/bash
 
-#? Sensei Scheduler
+#? Sensei Track Value
 #? ======================
-#? Manage scheduled commands for specified port
-#? 	<PORT> is given as the first argument. If omitted PORT_DEFAULT is used.
-#? It currently imports the "sensei_commands.scheduled.always" file into the sensei_commands.queue.
+#? Track a value in Sensei DB
+#? 	usage: sensei-track-value <NAME> <VALUE>
+#? 	<NAME> is the measure name in the form "Module>Measure"
+#? 	<VALUE> is the value to track (only int are supported)
+
 
 # Base
 . ${0%/*}/../res/base/sensei.base
