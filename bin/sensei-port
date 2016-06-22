@@ -22,6 +22,6 @@ if [[ "$1" = "-a" ]]; then
 		echo $port
 	done
 else
-	port=$(ls -l /dev/serial/by-path/* | grep -P '/[\w.]*/tty[\w]*' -o | head -1)
+	port=$(ls -l /dev/serial/by-path/* | grep -P '/[\w.]*/tty[\w]*' -o | sed "s/\.\./dev/gi" | head -1)
 	echo $port
 fi
