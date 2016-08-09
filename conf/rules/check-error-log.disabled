@@ -2,9 +2,9 @@
 # Check sensei_errors.log for Errors
 RULE_NAME="Sensei ERRORs"
 RULE_TEMPLATE="file-contains"
-CHECK_FILE="/home/supaka/Projects/sensei-0.7/sensei-server/logs/sensei_errors.log"
+CHECK_FILE="../../logs/sensei_errors.log"
 CHECK_PATTERN="ERROR"
 REACT_CMD=""
-REACT_MAILTO="daniele.bruneo@gmail.com"
+REACT_MAILTO="info@senseiserver.io"
 
  . $RES_DIR/base/rules/templates/rule.tmpl.$RULE_TEMPLATE
