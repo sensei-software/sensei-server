@@ -40,12 +40,12 @@ if [[ ! -f $XDIR/sensei_commands.log ]]; then
 fi
 if [ "$3" != "-b" ]; then
 	IFS=$'\n'
-	while read -t 2 resp_line; do
+	while read -r -t $EXT_COMMAND_RESPONSE_TIMEOUT resp_line; do
 		resp="$resp\n$resp_line"
-		if [[ "$resp_line" == *"$CMD = SENT" ]]; then
+		if [[ "$resp_line" == *"$CMD = }" ]]; then
 			break;
 		fi
-		sleep $COMMAND_RESPONSE_TIMEOUT
-	done < <(tail -n 0 -f $XDIR/sensei_commands.log 2>/dev/null)
-	echo -e "$resp" | grep "$CMD =" | $DIR/tools/ts "# $PORT OUT: "
+
+	done < <(tail -n 0 -f $XDIR/sensei_commands.log | grep --line-buffered "$CMD =" 2>/dev/null)
+	echo -e "$resp" | $DIR/tools/ts "# $PORT OUT: "
 fi

@@ -20,6 +20,14 @@
 # trap exit signal and save current queues and remove port
 trap '>&2 echo "EXIT signal received"; echo -e "$cmds" >> $TMP_DIR/$DEV_NAME.queue; exit 255' SIGINT SIGTERM SIGKILL
 
+# MySQL Connection
+if [[ -z "$SENSEI_DB_PASS" ]]; then
+	PASS_ARG=""
+else
+	PASS_ARG="-p$SENSEI_DB_PASS"
+fi
+exec 5> >(mysql --force -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
+
 # Main
 . $INC_DIR/port.open.inc "$PORT_PATH"
 
@@ -31,9 +39,23 @@ if [[ -f $TMP_DIR/$DEV_NAME.queue ]]; then
 fi
 # Commands loop
 while true; do
+
+	#clear TTY buffer
+	IFS=$'\n'
+	resp=""
+	while read -r -t $COMMAND_RESPONSE_TIMEOUT resp_line <&7; do
+			resp="$resp\n$resp_line"
+	done
+	resp="$(echo -e "$resp"| sed 's/\r//gi')"
+	if [[ ! -z "$resp" ]]; then
+		echo -e "$resp" | $DIR/tools/ts "<<<" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+	fi
+
+	#read queue
 	cmds=$(<$XDIR/sensei_commands.queue)
 	if [[ ! -z "$cmds" ]]; then
 		>$XDIR/sensei_commands.queue
+		>$XDIR/sensei_commands.lock
 		while read line;    do
 			COMMAND_LINE_FORMAT="%Y/%m/%d %H:%M:%S = $PORT <$DEV_NAME> $line ="
 			echo ">>>CMD (queue) > $PORT_NAME ($DEV_NAME): $line"
@@ -51,11 +73,14 @@ while true; do
 				elif [[ -f "$RES_DIR/base/commands/$cmd.cmd" ]]; then
 					. $RES_DIR/base/commands/$cmd.cmd
 				else
-					echo "$line" >&7
 
+					# sending command to TTY
+					echo -e "$line" >&7
+					$DIR/tools/ssleep $COMMAND_RESPONSE_WAIT
+
+					echo "{" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					#timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					#resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
-					IFS=$'\n'
 					resp=""
 					while read -r -t $COMMAND_RESPONSE_TIMEOUT resp_line <&7; do
 							resp="$resp\n$resp_line"
@@ -63,22 +88,31 @@ while true; do
 					resp="$(echo -e "$resp"| sed 's/\r//gi')"
 
 					while read resp_line; do
+						echo "$resp_line" | $DIR/tools/ts "  $COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+
 						measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
 						value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
 						value="$(echo $value | sed 's/\r//gi')"
 						if ! [[ $value =~ ^[0-9]+([.][0-9]+)?$ ]] ; then
 						   echo "error: Not a number ($value)" >&3
 						else
-							$DIR/sensei-track-value "$measure" "$value"
+							# Creating execution record
+							printf -v s_name "%q" "$measure"
+							printf -v s_val "%q" "$value"
+
+							sql="INSERT INTO sensors_log(EventTime,SensorName,SensorValue) VALUES (NOW(),'$s_name',$s_val);"
+
+							echo "$sql" >&5 &
+							#$DIR/sensei-track-value "$measure" "$value"
 							#echo "$measure = $value" >&2
-							echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log &
+
 						fi
 					done <<< "$resp"
 					#done <<< "$(timeout $COMMAND_RESPONSE_TIMEOUT tail -f <&7)"
 					#done <<< "$resp"
-					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log &
-
+					echo "}" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 				fi
+				rm $XDIR/sensei_commands.lock 2>/dev/null
 			;;
 			esac
 		done <<< "$cmds"
@@ -91,3 +125,6 @@ while true; do
 	fi
 	$DIR/tools/ssleep $SENSEI_MASTER_SLEEP_INTERVAL
 done
+
+#Close MySQL conenction
+exec 5<&-

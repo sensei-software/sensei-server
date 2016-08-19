@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "{" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a
 echo "REL_$rel_option COMMAND received. Switching to REL_SAFE MODE." | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 {
   rel_n=$(echo "$line" | cut -d ' ' -f2 | grep -E -o "[0-9]")
@@ -42,6 +42,7 @@ until [ "$rel_status" = "$rel_new_status" ]; do
   else
     if [ "$rel_status" = "$rel_new_status" ]; then
       echo "REL_SAFE: R$rel_n IS $rel_option" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+      echo "}" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
     else
       echo "REL_SAFE: BRINGING $rel_option R$rel_n ($rel_safe_attempts attempt)..." | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
       echo -e "REL_$rel_option $rel_n\n">&7

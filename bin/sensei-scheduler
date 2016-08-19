@@ -14,12 +14,12 @@
 
 while true; do
 	for CMD in $(cat $XDIR/sensei_commands.scheduled.always); do
-		while [ "$(cat $XDIR/sensei_commands.queue | grep -v '^$' | wc -l)" -ge 1 ]; do
+		while [ "$(cat $XDIR/sensei_commands.queue | grep -v '^$' | wc -l)" -ge 1 -o -f $XDIR/sensei_commands.lock ]; do
 			echo -ne "."
-			sleep 0.2
+			sleep $SCHEDULED_ALWAYS_INTERVAL
 		done
-		echo ""
-		$DIR/sensei-cmd "$CMD" "$PORT" -b
+		echo "SCHEDULE always $CMD"
+		$DIR/sensei-cmd "$CMD" "$PORT" -b &
 	done
 	sleep $SCHEDULED_ALWAYS_INTERVAL
 done

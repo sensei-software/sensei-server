@@ -18,7 +18,7 @@
 clear
 echo "SENSEI Prompt ($PORT) $DEV_ID '$DEV_NAME'"
 echo "----------------------------------------"
-
+IFS=$'\n'
 while true; do
 
 	read -p "Command>" cmd
@@ -30,7 +30,9 @@ while true; do
 		break;;
 		* )
 			echo $cmd >&7
-			while IFS= read -t $COMMAND_RESPONSE_TIMEOUT -u 7 -r line;  do
+			sleep $COMMAND_RESPONSE_WAIT
+			IFS=$'\n'
+			while read -t $COMMAND_RESPONSE_TIMEOUT -u 7 -r line;  do
 				trap "break" SIGQUIT
 				if [ -z "$line" ]; then
 					break

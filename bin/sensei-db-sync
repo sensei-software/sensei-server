@@ -7,25 +7,36 @@
 # Base
 . ${0%/*}/../res/base/sensei.base
 
+# MySQL Connection
+if [[ -z "$SENSEI_DB_PASS" ]]; then
+	PASS_ARG=""
+else
+	PASS_ARG="-p$SENSEI_DB_PASS"
+fi
+exec 5> >(mysql -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
+
+
 while true; do
 	echo "# DbSync - Purging not valid values..."
-	$DIR/sensei-db-command-file $RES_DIR/db/run/purge_invalid.sql
-	echo "$RES_DIR/db/run/purge_invalid.sql"
+	cat $RES_DIR/db/run/purge_invalid.sql >&5
 	echo "# DbSync - Cleaning old values...."
-	$DIR/sensei-db-command-file $RES_DIR/db/run/purge_old.sql
+	cat $RES_DIR/db/run/purge_old.sql >&5
 	echo "# DbSync - Updating calendar table for seconds...."
-	$DIR/sensei-db-command "CALL fill_calendar_s(ADDDATE(NOW(), INTERVAL -120 SECOND), NOW()) "
+	echo "CALL fill_calendar_s(ADDDATE(NOW(), INTERVAL -120 SECOND), NOW()); " >&5
 	echo "# DbSync - Updating calendar table for minutes...."
-	$DIR/sensei-db-command "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -5 MINUTE), NOW()) "
+	echo "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -5 MINUTE), NOW());" >&5
 	echo "# DbSync - Updating calendar table for hours...."
-	$DIR/sensei-db-command "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL - 2 HOUR), NOW()) "
+	echo "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL - 2 HOUR), NOW());" >&5
 	echo "# DbSync - Updating calendar table for days...."
-	$DIR/sensei-db-command "CALL fill_calendar_d(ADDDATE(NOW(), INTERVAL - 2 DAY), NOW()) "
+	echo "CALL fill_calendar_d(ADDDATE(NOW(), INTERVAL - 2 DAY), NOW());"  >&5
 	echo "# DbSync - Aggregating sensor_values_m...."
-	$DIR/sensei-db-command "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( ) - INTERVAL 3 MINUTE)+0) AND  DateField<((NOW( ) - INTERVAL 1 MINUTE)+0)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit "
+	echo "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( ) - INTERVAL 3 MINUTE)+0) AND  DateField<((NOW( ) - INTERVAL 1 MINUTE)+0)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;" >&5
 	echo "# DbSync - Aggregating sensor_values_h...."
-	$DIR/sensei-db-command "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( ) - INTERVAL 3 HOUR)+0) AND  DateField<((NOW( ) - INTERVAL 1 HOUR)+0)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit "
+	echo "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( ) - INTERVAL 3 HOUR)+0) AND  DateField<((NOW( ) - INTERVAL 1 HOUR)+0)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;" >&5
 
 	echo "# DbSync - Waiting...."
 	sleep  $SENSEI_DB_SYNC_INTERVAL
 done
+
+#Close MySQL conenction
+exec 5<&-
