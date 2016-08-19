@@ -52,20 +52,31 @@ while true; do
 					. $RES_DIR/base/commands/$cmd.cmd
 				else
 					echo "$line" >&7
+
 					#timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
-					resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
+					#resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
+					IFS=$'\n'
+					resp=""
+					while read -r -t $COMMAND_RESPONSE_TIMEOUT resp_line <&7; do
+							resp="$resp\n$resp_line"
+					done
+					resp="$(echo -e "$resp"| sed 's/\r//gi')"
+
 					while read resp_line; do
 						measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
 						value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
+						value="$(echo $value | sed 's/\r//gi')"
 						if ! [[ $value =~ ^[0-9]+([.][0-9]+)?$ ]] ; then
-						   echo "error: Not a number ($value)" >&3;
+						   echo "error: Not a number ($value)" >&3
 						else
 							$DIR/sensei-track-value "$measure" "$value"
-							echo "$measure = $value" >&2
-							echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+							#echo "$measure = $value" >&2
+							echo "$resp_line" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log &
 						fi
 					done <<< "$resp"
-					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
+					#done <<< "$(timeout $COMMAND_RESPONSE_TIMEOUT tail -f <&7)"
+					#done <<< "$resp"
+					echo "SENT" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log &
 
 				fi
 			;;

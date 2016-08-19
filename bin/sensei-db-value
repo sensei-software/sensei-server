@@ -1,4 +1,4 @@
 #!/bin/bash
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-$DIR/sensei-db-values -B -N | grep "$1" | grep "$2" | cut -f 4
+$DIR/sensei-db-command "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED; SELECT Value FROM sensors_values WHERE SensorName='$1' AND Measure='$2' ORDER BY DateField DESC LIMIT 0,1" -B -N

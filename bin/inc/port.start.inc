@@ -21,10 +21,10 @@ else
     if [ $? -eq 0 ]; then
       echo "# Port start $PORT: starting data flow..."
       (>&3 $DIR/sensei-scheduler "$PORT") &
-      (>&3 $DIR/sensei-log-sensors "$PORT") &
+      #(>&3 $DIR/sensei-log-sensors "$PORT") &
       echo "# Port start $PORT: started."
     else
         >&2 echo "FAILED to start port $PORT"
     fi
-  fi  
+  fi
 fi

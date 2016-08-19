@@ -39,5 +39,13 @@ if [[ ! -f $XDIR/sensei_commands.log ]]; then
 	>$XDIR/sensei_commands.log
 fi
 if [ "$3" != "-b" ]; then
-	timeout $EXT_COMMAND_RESPONSE_TIMEOUT tail -n 0 $XDIR/sensei_commands.log -f | grep "$CMD" | $DIR/tools/ts "# $PORT OUT: "
+	IFS=$'\n'
+	while read -t 2 resp_line; do
+		resp="$resp\n$resp_line"
+		if [[ "$resp_line" == *"$CMD = SENT" ]]; then
+			break;
+		fi
+		sleep $COMMAND_RESPONSE_TIMEOUT
+	done < <(tail -n 0 -f $XDIR/sensei_commands.log 2>/dev/null)
+	echo -e "$resp" | grep "$CMD =" | $DIR/tools/ts "# $PORT OUT: "
 fi

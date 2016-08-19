@@ -42,10 +42,11 @@ for PORT in $($DIR/sensei-port -a); do
 done
 #echo "# Starting Db Import..."
 #(>&3 $DIR/sensei-db-import) &
-echo "# Starting Db Sync..."
+#echo "# Starting Db Sync..."
+
 (>&3 $DIR/sensei-db-sync) &
 echo "# Starting Reactor..."
-(>&3 $DIR/sensei-reactor) &
+(>&3 sleep 60 && $DIR/sensei-reactor) &
 echo "# Starting System Monitor..."
 (>&3 $DIR/sensei-system-monitor) &
 
