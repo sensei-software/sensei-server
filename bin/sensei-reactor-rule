@@ -7,7 +7,7 @@
 
 ruleFile="$1"
 while true; do
-		echo "# Reactor - Executing RuleFile: $fileName"
+		echo "# Reactor - Executing RuleFile: $ruleFile"
 		. $ruleFile
 		sleep  $SENSEI_REACTOR_INTERVAL
 done

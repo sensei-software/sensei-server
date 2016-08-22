@@ -15,26 +15,58 @@ else
 fi
 exec 5> >(mysql -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
 
+now_s=$(date '+%s')
+last_calendar_s=$(( $now_s-60 ))
+last_calendar_m=$(( $now_s/60-1 ))
+last_calendar_h=$(( $now_s/3600-1 ))
+last_calendar_d=$(( $now_s/86400-1 ))
 
 while true; do
-	echo "# DbSync - Purging not valid values..."
-	cat $RES_DIR/db/run/purge_invalid.sql >&5
-	echo "# DbSync - Cleaning old values...."
-	cat $RES_DIR/db/run/purge_old.sql >&5
-	echo "# DbSync - Updating calendar table for seconds...."
-	echo "CALL fill_calendar_s(ADDDATE(NOW(), INTERVAL -120 SECOND), NOW()); " >&5
-	echo "# DbSync - Updating calendar table for minutes...."
-	echo "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -5 MINUTE), NOW());" >&5
-	echo "# DbSync - Updating calendar table for hours...."
-	echo "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL - 2 HOUR), NOW());" >&5
-	echo "# DbSync - Updating calendar table for days...."
-	echo "CALL fill_calendar_d(ADDDATE(NOW(), INTERVAL - 2 DAY), NOW());"  >&5
-	echo "# DbSync - Aggregating sensor_values_m...."
-	echo "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( ) - INTERVAL 3 MINUTE)+0) AND  DateField<((NOW( ) - INTERVAL 1 MINUTE)+0)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;" >&5
-	echo "# DbSync - Aggregating sensor_values_h...."
-	echo "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( ) - INTERVAL 3 HOUR)+0) AND  DateField<((NOW( ) - INTERVAL 1 HOUR)+0)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;" >&5
+	now_s=$(date '+%s')
 
-	echo "# DbSync - Waiting...."
+	elapsed_calendar_s=$(( $now_s-$last_calendar_s ))
+	if [[ $elapsed_calendar_s -gt 0 ]]; then
+		last_calendar_s=$(( $now_s-1 ))
+		echo "# DbSync - Updating calendar table for $elapsed_calendar_s seconds...."
+		echo "CALL fill_calendar_s(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_s SECOND ), NOW()); " >&5
+	fi
+
+	elapsed_calendar_m=$(( ($now_s/60-$last_calendar_m) ))
+
+	if [[ $elapsed_calendar_m -gt 0 ]]; then
+		last_calendar_m=$(( $now_s/60 ))
+		echo "# DbSync - Updating calendar table for $elapsed_calendar_m minutes...."
+		echo "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_m MINUTE), NOW());" >&5
+
+		echo "# DbSync - Aggregating sensor_values_m...."
+		echo "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( )+0)/100*100-100) AND  DateField<((NOW( )+0)/100*100)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;" >&5
+
+		echo "# DbSync - Purging not valid values..."
+		cat $RES_DIR/db/run/purge_invalid.sql >&5
+
+		echo "# DbSync - Cleaning old values...."
+		cat $RES_DIR/db/run/purge_old.sql >&5
+
+	fi
+
+	elapsed_calendar_h=$(( ($now_s/3600-$last_calendar_h) ))
+	if [[ $elapsed_calendar_h -gt 0 ]]; then
+		last_calendar_h=$(( $now_s/3600 ))
+		echo "# DbSync - Updating calendar table for $elapsed_calendar_h hours...."
+		echo "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_h HOUR), NOW());" >&5
+
+		echo "# DbSync - Aggregating sensor_values_h...."
+		echo "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( )+0)/10000*10000-10000) AND  DateField<((NOW( )+0)/10000*10000)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;" >&5
+	fi
+
+	elapsed_calendar_d=$(( ($now_s/86400-$last_calendar_d) ))
+	if [[ $elapsed_calendar_d -gt 0 ]]; then
+		last_calendar_d=$(( $now_s/86400 ))
+		echo "# DbSync - Updating calendar table for $elapsed_calendar_d days...."
+		echo "CALL fill_calendar_d(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_d DAY), NOW());"  >&5
+	fi
+
+	#echo "# DbSync - Waiting...."
 	sleep  $SENSEI_DB_SYNC_INTERVAL
 done
 

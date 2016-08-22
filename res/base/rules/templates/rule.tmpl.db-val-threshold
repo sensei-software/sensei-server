@@ -49,7 +49,7 @@ else
 							#	echo "Last CmdOpp n: $lastCmdOppLine"
 								if [[ -z "$lastCmdLine" || "$lastCmdOppLine" -gt "$lastCmdLine" || "$lastCmdLine" -eq 0 ]]; then
 									echo " REACTION: $REACT_DEVICE>$REACT_COMMAND"
-		            	$DIR/sensei-cmd "$REACT_COMMAND" "$REACT_DEVICE" #2>&1 >/dev/null
+		            	$DIR/sensei-cmd "$REACT_COMMAND" "$REACT_DEVICE" -b & #2>&1 >/dev/null
 								fi
 				fi
 				if [[ ! -z "$REACT_MAILTO" ]]; then

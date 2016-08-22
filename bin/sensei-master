@@ -82,30 +82,47 @@ while true; do
 					#timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					#resp="$(timeout $COMMAND_RESPONSE_TIMEOUT cat <&7)"
 					resp=""
+					start_s=$(date '+%s')
 					while read -r -t $COMMAND_RESPONSE_TIMEOUT resp_line <&7; do
 							resp="$resp\n$resp_line"
+							now_s=$(date '+%s')
+							elapsed=$(( $now_s-$start_s ))
+							if [[ $elapsed -gt 5 ]]; then
+								echo "error: TIMEOUT ($elapsed) reading from $PORT " >&2
+								break
+							fi
 					done
 					resp="$(echo -e "$resp"| sed 's/\r//gi')"
 
 					while read resp_line; do
-						echo "$resp_line" | $DIR/tools/ts "  $COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 
-						measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
-						value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
-						value="$(echo $value | sed 's/\r//gi')"
-						if ! [[ $value =~ ^[0-9]+([.][0-9]+)?$ ]] ; then
-						   echo "error: Not a number ($value)" >&3
-						else
-							# Creating execution record
-							printf -v s_name "%q" "$measure"
-							printf -v s_val "%q" "$value"
+						resp_line="$(echo $resp_line | sed '/^\s*$/d')"
+						if [[ ! -z "$resp_line" ]]; then
+							echo "$resp_line" | $DIR/tools/ts "  $COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 
-							sql="INSERT INTO sensors_log(EventTime,SensorName,SensorValue) VALUES (NOW(),'$s_name',$s_val);"
+							# measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
+							measure="$(echo $resp_line | sed 's/\(.*\) (.*/\1/gi' )"
+							sensor="$(echo $resp_line | sed 's/.*(\(.*\)).*/\1/gi' )"
+							unit="$(echo $resp_line | sed 's/.*{\(.*\)}.*/\1/gi' )"
+							value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
+							value="$(echo $value | sed 's/\r//gi')"
 
-							echo "$sql" >&5 &
-							#$DIR/sensei-track-value "$measure" "$value"
-							#echo "$measure = $value" >&2
 
+							if ! [[ $value =~ ^[0-9]+([.][0-9]+)?$ ]] ; then
+							   echo "error: Not a number ($value)" >&2
+							else
+								# Creating execution record
+								printf -v s_name "%q" "$DEV_NAME>$sensor"
+								printf -v s_measure "%q" "$measure"
+								printf -v s_val "%q" "$value"
+
+								sql="INSERT IGNORE INTO sensors_values(DateField,SensorName,Measure,Unit,Value) VALUES ((NOW() + 0),'$s_name', '$s_measure','$unit',$s_val);"
+
+								echo "$sql" >&5 &
+								#$DIR/sensei-track-value "$measure" "$value"
+								#echo "$measure = $value" >&2
+
+							fi
 						fi
 					done <<< "$resp"
 					#done <<< "$(timeout $COMMAND_RESPONSE_TIMEOUT tail -f <&7)"

@@ -24,6 +24,11 @@ if [[ ! -d "$XDIR" ]]; then
 	cp $RES_DIR/dev_dir_tpl/* $XDIR/
 else
 	echo "# Port $PORT WorkingDir: Found device dir $XDIR"
+	if [[ -f $XDIR/sensei_commands.lock ]]; then
+		echo "# Port $PORT Lock found: removing"
+		rm -f $XDIR/sensei_commands.lock
+		echo "# Port $PORT: WARN some command may have been lost!"
+	fi
 fi
 
 # Communication init
