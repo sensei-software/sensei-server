@@ -3,7 +3,7 @@
 # Base
 . ${0%/*}/../res/base/sensei.base
 echo "killing sensei-* processes"
-kill $(pgrep -f sensei- | grep -v ^$$\$) >/dev/null 2>&1
+kill $(pgrep -f sensei- | grep -v ^$$\$ | grep -v ^$1\$ | grep -v ^$2\$ ) >/dev/null 2>&1
 echo "killing others"
 killall tee 2>/dev/null
 killall tail 2>/dev/null

@@ -40,12 +40,18 @@ if [[ ! -f $XDIR/sensei_commands.log ]]; then
 fi
 if [ "$3" != "-b" ]; then
 	IFS=$'\n'
+	start_s=$(date '+%s')
 	while read -r -t $EXT_COMMAND_RESPONSE_TIMEOUT resp_line; do
 		resp="$resp\n$resp_line"
 		if [[ "$resp_line" == *"$CMD = }" ]]; then
 			break;
 		fi
-
+		now_s=$(date '+%s')
+		elapsed=$(( $now_s-$start_s ))
+		if [[ $elapsed -gt 5 ]]; then
+			echo "error: TIMEOUT ($elapsed) command response for $CMD on $PORT " >&2
+			break
+		fi
 	done < <(tail -n 0 -f $XDIR/sensei_commands.log | grep --line-buffered "$CMD =" 2>/dev/null)
 	echo -e "$resp" | $DIR/tools/ts "# $PORT OUT: "
 fi

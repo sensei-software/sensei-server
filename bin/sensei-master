@@ -100,12 +100,28 @@ while true; do
 						if [[ ! -z "$resp_line" ]]; then
 							echo "$resp_line" | $DIR/tools/ts "  $COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 
+							resp_line="$(echo $resp_line | sed 's/\(.*\) (\(.*\)).*{\(.*\)}.*= \([0-9.]*.*\).*/\1;\2;\3;\4/gi' )"
+
+							IFS=';' read -a myarray <<< "$resp_line"
+
+							measure="${myarray[0]}"
+							sensor="${myarray[1]}"
+							unit="${myarray[2]}"
+							value="${myarray[3]}"
+							# measure="$(echo $resp_line | cut -d ';' -f1 )"
+							# sensor="$(echo $resp_line | cut -d ';' -f2 )"
+							# unit="$(echo $resp_line |  cut -d ';' -f3 )"
+							# value="$(echo $resp_line |  cut -d ';' -f4 )"
+
+							# value="$(echo $value | sed 's/\r//gi')"
+							#echo "$measure $sensor $unit $value";
 							# measure="<$DEV_NAME> $(echo $resp_line | sed 's/\(.*\) =.*/\1/gi' )"
-							measure="$(echo $resp_line | sed 's/\(.*\) (.*/\1/gi' )"
-							sensor="$(echo $resp_line | sed 's/.*(\(.*\)).*/\1/gi' )"
-							unit="$(echo $resp_line | sed 's/.*{\(.*\)}.*/\1/gi' )"
-							value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
-							value="$(echo $value | sed 's/\r//gi')"
+
+							# measure="$(echo $resp_line | sed 's/\(.*\) (.*/\1/gi' )"
+							# sensor="$(echo $resp_line | sed 's/.*(\(.*\)).*/\1/gi' )"
+							# unit="$(echo $resp_line | sed 's/.*{\(.*\)}.*/\1/gi' )"
+							# value="$(echo $resp_line | sed 's/.*= \([0-9.]*.*\)/\1/gi' )"
+							# value="$(echo $value | sed 's/\r//gi')"
 
 
 							if ! [[ $value =~ ^[0-9]+([.][0-9]+)?$ ]] ; then
