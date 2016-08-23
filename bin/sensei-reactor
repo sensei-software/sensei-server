@@ -6,7 +6,7 @@
  . $INC_DIR/daemons.log.inc
 
 echo "# Reactor - Loading reactions"
-ruleFiles=$(ls -d -1  $CONF_DIR/rules/*.active 2>/dev/null)
+ruleFiles=$(ls -d -1  $CONF_DIR/rules/*.on 2>/dev/null)
 if [ -z "$ruleFiles" ]; then
 	echo "No rules found"
 	exit 1
@@ -15,5 +15,5 @@ for ruleFile in $ruleFiles ; do
 			fileName=$(basename $ruleFile)
 			echo "# Reactor - Loading rule: $fileName"
 			$DIR/sensei-reactor-rule $CONF_DIR/rules/$fileName &
-			sleep  $SENSEI_REACTOR_INTERVAL
+			sleep  1
 done

@@ -48,7 +48,7 @@ else
 							#	echo "Last Cmd n: $lastCmdLine"
 							#	echo "Last CmdOpp n: $lastCmdOppLine"
 								if [[ -z "$lastCmdLine" || "$lastCmdOppLine" -gt "$lastCmdLine" || "$lastCmdLine" -eq 0 ]]; then
-									echo " REACTION: $REACT_DEVICE>$REACT_COMMAND"
+									echo "$RULE_NAME REACTION: $REACT_DEVICE>$REACT_COMMAND"
 		            	$DIR/sensei-cmd "$REACT_COMMAND" "$REACT_DEVICE" -b & #2>&1 >/dev/null
 								fi
 				fi

@@ -55,7 +55,7 @@ while true; do
 	cmds=$(<$XDIR/sensei_commands.queue)
 	if [[ ! -z "$cmds" ]]; then
 		>$XDIR/sensei_commands.queue
-		>$XDIR/sensei_commands.lock
+		echo -e "$cmds" >$XDIR/sensei_commands.lock
 		while read line;    do
 			COMMAND_LINE_FORMAT="%Y/%m/%d %H:%M:%S = $PORT <$DEV_NAME> $line ="
 			echo ">>>CMD (queue) > $PORT_NAME ($DEV_NAME): $line"

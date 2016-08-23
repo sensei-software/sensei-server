@@ -52,6 +52,6 @@ if [ "$3" != "-b" ]; then
 			echo "error: TIMEOUT ($elapsed) command response for $CMD on $PORT " >&2
 			break
 		fi
-	done < <(tail -n 0 -f $XDIR/sensei_commands.log | grep --line-buffered "$CMD =" 2>/dev/null)
+	done < <(timeout 5 tail -n 0 -f $XDIR/sensei_commands.log | grep --line-buffered "$CMD =" 2>/dev/null)
 	echo -e "$resp" | $DIR/tools/ts "# $PORT OUT: "
 fi

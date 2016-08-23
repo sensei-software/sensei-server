@@ -19,4 +19,4 @@ out_procs="$all_procs"
 if [ ! -z "$ONLY_MAIN_PROCESS" ]; then	out_procs=$(echo -e "$out_procs" | tr -s ' ' | grep -P '\w*\s\d*\s1\s'); fi
 if [ ! -z "$PROCESS_NAME" ]; then out_procs=$(echo -e "$out_procs" | tr -s ' ' | grep "$PROCESS_NAME"); fi
 if [ ! -z "$OUTPUT_ONLY_PID" ]; then out_procs=$(echo -e "$out_procs" | tr -s ' ' | cut -d ' ' -f2); fi
-echo -e "$out_procs"
+echo -e "$out_procs" | sed "s#$DIR/##g" | sed "s#/bin/bash##g"
