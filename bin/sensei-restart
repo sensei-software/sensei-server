@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+$DIR/sensei-stop $$
+$DIR/sensei-start

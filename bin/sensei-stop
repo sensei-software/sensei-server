@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+echo -e "# Stopping Sensei."
+$DIR/sensei-kill-all $$ $1
