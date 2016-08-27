@@ -23,4 +23,6 @@ DEV=$(echo /dev/bus/usb/`udevadm info --name=$PORT_ARG --attribute-walk | sed -n
 echo "Sensei Usb Reset"
 RESET_CMD="$USBRESET $DEV"
 echo ">$RESET_CMD"
-bash -c "$RESET_CMD"
+if [[ -z "$2" ]]; then
+	bash -c "$RESET_CMD"
+fi

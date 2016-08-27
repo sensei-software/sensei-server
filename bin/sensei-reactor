@@ -15,5 +15,5 @@ for ruleFile in $ruleFiles ; do
 			fileName=$(basename $ruleFile)
 			echo "# Reactor - Loading rule: $fileName"
 			$DIR/sensei-reactor-rule $CONF_DIR/rules/$fileName &
-			sleep  1
+			sleep  3
 done

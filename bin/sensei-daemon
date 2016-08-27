@@ -28,12 +28,16 @@ if [[ "$CLEAN_STARTUP" == "true" ]]; then
 	echo "# Clean startup: cleaning dev..."
 	2>/dev/null rm -r $DEV_DIR/*
   echo "# Clean startup: cleaning TCP symlinks..."
-  ls -l -d -1 /dev/serial/by-path/*.* | grep TCP | tr -s ' ' | cut -d ' ' -f 9 | xargs -r sudo rm
+  if ls /dev/serial/by-path/*.* >/dev/null 2>&1 ; then
+    ls -l -d -1 /dev/serial/by-path/*.* | grep TCP | tr -s ' ' | cut -d ' ' -f 9 | xargs -r sudo rm
+  fi
 fi
 if [[ -f "$CONF_DIR/tcp_ports.conf" ]]; then
   echo "# Attaching TCP ports"
   while read line;    do
+    if [[ ! -z "$line" && "$line" != "" ]]; then
       (>&3 eval "$DIR/sensei-attach-tcp $line" ) &
+    fi
   done <<< "$(cat $CONF_DIR/tcp_ports.conf)"
 fi
 sleep 3
