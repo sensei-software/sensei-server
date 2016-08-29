@@ -76,7 +76,7 @@ while true; do
 
 					# sending command to TTY
 					echo -e "$line" >&7
-					$DIR/tools/ssleep $COMMAND_RESPONSE_WAIT
+					sleep $COMMAND_RESPONSE_WAIT
 
 					echo "{" | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
 					#timeout $COMMAND_RESPONSE_TIMEOUT cat <&7 | $DIR/tools/ts "$COMMAND_LINE_FORMAT"| tee -a $XDIR/sensei_commands.log
@@ -156,7 +156,7 @@ while true; do
 			exit 0
 		fi
 	fi
-	$DIR/tools/ssleep $SENSEI_MASTER_SLEEP_INTERVAL
+	sleep $SENSEI_MASTER_SLEEP_INTERVAL
 done
 
 #Close MySQL conenction

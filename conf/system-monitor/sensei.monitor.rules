@@ -1,6 +1,9 @@
 #!/bin/bash
 
-cpus=$(grep -c ^processor /proc/cpuinfo)
+if [[ -z "$cpus" ]]; then
+  cpus=$(grep -c ^processor /proc/cpuinfo)
+fi
+
 name="<System> CPU_LOAD (CPU) [] {$cpus}"
 val="$(cat /proc/loadavg | cut -d ' ' -f 1)"
 $DIR/sensei-track-value "$name" "$val"
@@ -9,13 +12,13 @@ name="<System> CPU_USAGE (CPU) [] {%}"
 val="$(top -bn 1 | awk '{print $9}' | tail -n +8 | awk '{s+=$1} END {print s}')"
 $DIR/sensei-track-value "$name" "$val"
 
-cpus=$(grep -c ^processor /proc/cpuinfo)
+# cpus=$(grep -c ^processor /proc/cpuinfo)
 name="<System> SENSEI_PROCS (CPU) [] {$cpus}"
 val="$(top -b -n 1 | grep sensei | wc -l)"
 $DIR/sensei-track-value "$name" "$val"
 
 name="<System> USED_SPACE_ROOT (FS) [rootfs] {%}"
-val="$(df | grep root | head -1 | tr -s ' ' | cut -d ' ' -f 5 | sed 's/%//g')"
+val="$(df / | tr -s ' ' | cut -d ' ' -f 5 | tail -1 | sed 's/%//g')"
 $DIR/sensei-track-value "$name" "$val"
 
 #name="<System> TX_RATE_WLAN0 (NET) [wlan0] {bs}"

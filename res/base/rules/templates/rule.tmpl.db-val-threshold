@@ -43,8 +43,8 @@ else
 				fi
 				echo $RESP
 				if [[ ! -z "$REACT_DEVICE" && ! -z "$REACT_COMMAND" ]]; then
-								lastCmdLine=$(grep -n "$REACT_COMMAND" $DEV_DIR/$REACT_DEVICE/sensei_commands.log  | cut -f 1 | tail -n 1 | cut -d ':' -f 1 | tr -d ' ' )
-								lastCmdOppLine=$(grep -n "$REACT_COMMAND_OPP" $DEV_DIR/$REACT_DEVICE/sensei_commands.log  | cut -f 1 | tail -n 1 | cut -d ':' -f 1 | tr -d ' ' )
+								lastCmdLine=$(grep -n "$REACT_COMMAND" $DEV_DIR/$REACT_DEVICE/sensei_commands.log  | tail -n 1 | cut -f 1 | cut -d ':' -f 1 | tr -d ' ' )
+								lastCmdOppLine=$(grep -n "$REACT_COMMAND_OPP" $DEV_DIR/$REACT_DEVICE/sensei_commands.log  | tail -n 1 | cut -f 1 | cut -d ':' -f 1 | tr -d ' ' )
 							#	echo "Last Cmd n: $lastCmdLine"
 							#	echo "Last CmdOpp n: $lastCmdOppLine"
 								if [[ -z "$lastCmdLine" || "$lastCmdOppLine" -gt "$lastCmdLine" || "$lastCmdLine" -eq 0 ]]; then

@@ -6,6 +6,6 @@
 if [[ -f $CONF_DIR/system-monitor/sensei.monitor.rules ]]; then
 	while true; do
 		. $CONF_DIR/system-monitor/sensei.monitor.rules
-		$DIR/tools/ssleep $SENSEI_SYSTEM_MONITOR_INTERVAL
+		sleep $SENSEI_SYSTEM_MONITOR_INTERVAL
 	done
 fi
