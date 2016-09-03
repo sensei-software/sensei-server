@@ -4,4 +4,6 @@
 . ${0%/*}/../res/base/sensei.base
 
 $DIR/sensei-stop $$
+echo "Waiting..."
+sleep 10
 $DIR/sensei-start

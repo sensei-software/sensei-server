@@ -15,6 +15,8 @@
 # Arguments parsing
 . $INC_DIR/port.parsing.inc "$2"
 
+. $INC_DIR/daemons.log.inc
+
 CMD=$1
 if [[ -z "$CMD" ]] ; then
 	>&2 echo "ERROR: missing param. <COMMAND> [<PORT>]"
@@ -33,8 +35,8 @@ else
 	#echo "Normal command $CMD"
 	echo $CMD>>$XDIR/sensei_commands.queue
 fi
-echo "# Queued Command $CMD for port $PORT"
-cat $XDIR/sensei_commands.queue |$DIR/tools/ts "# $PORT queue: "
+# echo "# Queued Command $CMD for port $PORT"
+#cat $XDIR/sensei_commands.queue |$DIR/tools/ts "# $PORT queue: "
 if [[ ! -f $XDIR/sensei_commands.log ]]; then
 	>$XDIR/sensei_commands.log
 fi

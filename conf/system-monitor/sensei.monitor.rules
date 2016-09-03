@@ -17,7 +17,7 @@ name="<System> SENSEI_PROCS (CPU) [] {$cpus}"
 val="$(top -b -n 1 | grep sensei | wc -l)"
 $DIR/sensei-track-value "$name" "$val"
 
-name="<System> USED_SPACE_ROOT (FS) [rootfs] {%}"
+name="<System> USED_SPACE_ROOT (FS) [] {%}"
 val="$(df / | tr -s ' ' | cut -d ' ' -f 5 | tail -1 | sed 's/%//g')"
 $DIR/sensei-track-value "$name" "$val"
 

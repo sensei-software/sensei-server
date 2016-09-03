@@ -39,7 +39,7 @@ while true; do
 		echo "CALL fill_calendar_m(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_m MINUTE), NOW());" >&5
 
 		echo "# DbSync - Aggregating sensor_values_m...."
-		echo "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>((NOW( )+0)/100*100-100) AND  DateField<((NOW( )+0)/100*100)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;" >&5
+		echo "INSERT IGNORE INTO sensors_values_m(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/100)*100, SensorName, Measure, Unit, AVG(Value) FROM sensors_values WHERE  DateField>(((NOW( )-INTERVAL 1 MINUTE)+0)/100*100) AND  DateField<((NOW( )+0)/100*100)  GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;" >&5
 
 		echo "# DbSync - Purging not valid values..."
 		cat $RES_DIR/db/run/purge_invalid.sql >&5
@@ -56,7 +56,7 @@ while true; do
 		echo "CALL fill_calendar_h(ADDDATE(NOW(), INTERVAL -$elapsed_calendar_h HOUR), NOW());" >&5
 
 		echo "# DbSync - Aggregating sensor_values_h...."
-		echo "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>((NOW( )+0)/10000*10000-10000) AND  DateField<((NOW( )+0)/10000*10000)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;" >&5
+		echo "INSERT IGNORE INTO sensors_values_h(DateField,SensorName,Measure,Unit,Value) SELECT FLOOR(DateField/10000)*10000, SensorName, Measure, Unit, AVG(Value) FROM sensors_values_m WHERE  DateField>(((NOW( )-INTERVAL 1 HOUR)+0)/10000*10000) AND  DateField<((NOW( )+0)/10000*10000)  GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;" >&5
 	fi
 
 	elapsed_calendar_d=$(( ($now_s/86400-$last_calendar_d) ))

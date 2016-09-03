@@ -50,7 +50,7 @@ done
 
 (>&3 $DIR/sensei-db-sync) &
 echo "# Starting Reactor..."
-(>&3 sleep 60 && $DIR/sensei-reactor) &
+(sleep 60 && $DIR/sensei-reactor >&3 ) &
 echo "# Starting System Monitor..."
 (>&3 $DIR/sensei-system-monitor) &
 

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Help
+#? Sensei Prompt
+#? ======================
+#? > sensei-prompt [<PORT>]
+#? 	Opens a direct prompt to a device.
+#? 		<PORT> is given as the first argument. If omitted sensei-port output is used.
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+# Main
+. $INC_DIR/port.open.inc "$PORT_PATH"
+clear
+echo "SENSEI Prompt ($PORT) $DEV_ID '$DEV_NAME'"
+echo "----------------------------------------"
+IFS=$'\n'
+while true; do
+
+	read -p "Command>" cmd
+	case $cmd in
+		"QUIT")
+			echo "Exit."
+			. $INC_DIR/port.close.inc "$PORT_PATH"
+			exit 0;
+		break;;
+		* )
+			echo $cmd >&7
+			sleep $COMMAND_RESPONSE_WAIT
+			IFS=$'\n'
+			while read -t $COMMAND_RESPONSE_TIMEOUT -u 7 -r line;  do
+				trap "break" SIGQUIT
+				if [ -z "$line" ]; then
+					break
+				else
+					echo -e $line  | $DIR/tools/ts "$PORT_NAME>"
+				fi;
+			done
+		;;
+	esac
+done

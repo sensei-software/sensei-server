@@ -12,18 +12,20 @@
 # Arguments parsing
 . $INC_DIR/port.parsing.inc "$1"
 
+CMDS=$(cat $XDIR/sensei_commands.scheduled.always)
+
 while true; do
-{
-	for CMD in $(cat $XDIR/sensei_commands.scheduled.always); do
-		while [ "$(cat $XDIR/sensei_commands.queue | grep -v '^$' | wc -l)" -ge 1 -o -f $XDIR/sensei_commands.lock ]; do
+   {
+	for CMD in "$CMDS"; do
+		while [ "$(wc -c $XDIR/sensei_commands.queue |  awk '{print $1}')" -gt 0 -o -f $XDIR/sensei_commands.lock ]; do
 			echo -ne "."
 			sleep 0.5
 		done
 		echo "SCHEDULE always $CMD"
-		timeout $SCHEDULED_ALWAYS_INTERVAL $DIR/sensei-cmd "$CMD" "$PORT" -b &
+		$DIR/sensei-cmd "$CMD" "$PORT" -b &
 	done
 	sleep $SCHEDULED_ALWAYS_INTERVAL
-} || {
+   } || {
 	echo "Scheduler ERROR" >&2
-}
+   }
 done
