@@ -17,7 +17,7 @@ else
   ($DIR/sensei-master-start "$PORT") &
   if [ $? -eq 0 ]; then
     sleep 5
-    $DIR/sensei-master-check "$PORT"
+    $DIR/sensei-master-check "$PORT" -nf
     if [ $? -eq 0 ]; then
       echo "# Port start $PORT: starting data flow..."
       (>&3 $DIR/sensei-scheduler "$PORT") &

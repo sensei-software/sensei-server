@@ -19,14 +19,15 @@ done
 
 . $INC_DIR/daemons.log.inc
 
-trap ">&2 echo 'DAEMON EXIT signal received'; PORTS=\"\$($DIR/sensei-port -a)\"; IFS=$'\n'; for PORT in \$PORTS; do $DIR/sensei-discard-port \"\$PORT\" ; done; $DIR/sensei-kill-all; exit 255" SIGINT SIGTERM SIGKILL
+#trap ">&2 echo 'DAEMON EXIT signal received'; PORTS=\"\$($DIR/sensei-port -a)\"; IFS=$'\n'; for PORT in \$PORTS; do $DIR/sensei-discard-port \"\$PORT\" ; done; $DIR/sensei-kill-all; exit 255" SIGINT SIGTERM SIGKILL
+trap ">&2 echo 'DAEMON EXIT signal received';exit 255" SIGINT SIGTERM SIGKILL
 
 $DIR/tools/incat /var/log/syslog "USB_DISC" "disconnected from tty" -e >/dev/null
 $DIR/tools/incat /var/log/syslog "USB_CONN" "attached to tty" -e >/dev/null
 
 if [[ "$CLEAN_STARTUP" == "true" ]]; then
 	echo "# Clean startup: cleaning dev..."
-	2>/dev/null rm -r $DEV_DIR/*
+	rm -r $DEV_DIR/* 2>/dev/null
   echo "# Clean startup: cleaning TCP symlinks..."
   if ls /dev/serial/by-path/*.* >/dev/null 2>&1 ; then
     ls -l -d -1 /dev/serial/by-path/*.* | grep TCP | tr -s ' ' | cut -d ' ' -f 9 | xargs -r sudo rm
@@ -54,6 +55,10 @@ echo "# Starting Reactor..."
 echo "# Starting System Monitor..."
 (>&3 $DIR/sensei-system-monitor) &
 
+
+start_s=$(date '+%s')
+last_mastercheck_s="$start_s"
+
 echo "# Watching for USB events..."
 while true; do
 	# USB DISCONNECTIONS
@@ -76,6 +81,23 @@ while true; do
 			. $INC_DIR/port.start.inc $PORT
 		done
 	fi
+
+  now_s=$(date '+%s')
+  elapsed_s=$(( $now_s - $last_mastercheck_s ))
+
+  if [[ $elapsed_s -ge $SENSEi_DAEMON_MASTERS_CHECK_INTERVAL ]]; then
+    last_mastercheck_s=$(date '+%s')
+    echo "Checking Masters..."
+    # CHECKING Masters
+    ports="$($DIR/sensei-port -a)"
+    for port in $ports; do
+      $DIR/sensei-master-check $port
+      if [[ $? == 2 ]]; then
+        echo "PORT $port is FROZEN restarting..."
+        $DIR/sensei-master-restart $port &
+      fi
+    done
+  fi
 
 	sleep $SENSEI_DAEMON_POLLING_INTERVAL
 

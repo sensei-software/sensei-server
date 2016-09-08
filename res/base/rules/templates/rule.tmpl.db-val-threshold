@@ -12,7 +12,7 @@
 
 REACT_COMMAND_LOW=$(echo "$REACT_COMMANDS" | cut -d "|" -f 1)
 REACT_COMMAND_HIGH=$(echo "$REACT_COMMANDS" | cut -d "|" -f 2)
-
+AVG_S=$SENSEI_DB_VALUE_INTERVAL
 lastval=""
 attempts=0
 while [ "$attempts" -lt "$REACTOR_NODATA_RETRY_ATTEMPTS" ]; do

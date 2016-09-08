@@ -30,10 +30,10 @@ if [[ -z $pid ]]; then
 	($DIR/sensei-master $PORT | tee -a $out 1>&3) &
 	pid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
   if [[ ! -z $pid ]]; then
-		echo -e "# Sensei Master STARTED for port $PORT \t= output file: $out"
+		echo -e "# Sensei Master STARTED for port $PORT"
 		exit 0
   else
-		>&2 echo "# Sensei Master ERROR (0401) = NOT STARTED \t= output file: $out"
+		>&2 echo "# Sensei Master ERROR (0401) = NOT STARTED"
 		exit 401
   fi
 else

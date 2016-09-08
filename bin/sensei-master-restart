@@ -17,6 +17,6 @@ FORCE_ARG=$2
 echo "# Stopping ($FORCE_ARG) SenseiMaster on port $PORT"
 
 echo "Sensei RESTART"
-$DIR/sensei-master-stop $PORT -f
+$DIR/sensei-master-stop $PORT $FORCE_ARG
 sleep $SENSEI_MASTER_STOP_TIMEOUT
 $DIR/sensei-master-start $PORT

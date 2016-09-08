@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Base
+. ${0%/*}/../res/base/sensei.base
+
+# Arguments parsing
+. $INC_DIR/port.parsing.inc "$1"
+
+shopt -s expand_aliases
+alias hl="$DIR/tools/highlight"
+
+# Main
+echo "# Watching port: $PORT ($DEV_NAME)"
+tail -f $XDIR/sensei_app \
+        | hl blue "ttyUSB" \
+        | hl red "ERROR\|ERR\|timeout" \
+        | hl green "=" \
+        | hl magenta "{\|}" \
+        | hl yellow "<\|>" 

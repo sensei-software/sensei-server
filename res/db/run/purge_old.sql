@@ -6,3 +6,6 @@ DELETE FROM sensors_values
 
 DELETE FROM sensors_values_m
          WHERE DateField < (NOW() - INTERVAL 24 HOUR)+0;
+
+DELETE FROM calendar_s
+         WHERE DateField < (NOW() - INTERVAL 24 HOUR)+0;

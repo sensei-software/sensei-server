@@ -18,7 +18,7 @@
 . $INC_DIR/port.parsing.inc "$1"
 
 # trap exit signal and save current queues and remove port
-trap '>&2 echo "EXIT signal received"; echo -e "$cmds" >> $TMP_DIR/$DEV_NAME.queue; exit 255' SIGINT SIGTERM SIGKILL
+trap '>&2 echo "EXIT signal received"; echo -n "$cmds" >> $TMP_DIR/$DEV_NAME.queue; exit 255' SIGINT SIGTERM SIGKILL
 
 # MySQL Connection
 if [[ -z "$SENSEI_DB_PASS" ]]; then
@@ -52,9 +52,12 @@ while true; do
 	fi
 
 	#read queue
-	cmds=$(<$XDIR/sensei_commands.queue)
-	if [[ ! -z "$cmds" ]]; then
+	cmds=""
+	if [[ -s $XDIR/sensei_commands.queue ]]; then
+		cmds=$(<$XDIR/sensei_commands.queue)
 		>$XDIR/sensei_commands.queue
+	fi
+	if [[ ! -z "$cmds" ]]; then
 		echo -e "$cmds" >$XDIR/sensei_commands.lock
 		while read line;    do
 			COMMAND_LINE_FORMAT="%Y/%m/%d %H:%M:%S = $PORT <$DEV_NAME> $line ="

@@ -15,7 +15,10 @@
 # Arguments parsing
 . $INC_DIR/port.parsing.inc "$2"
 
-. $INC_DIR/daemons.log.inc
+# Logging enabled only in DEBUG mode
+if [[ "$DEBUG_MODE" == "on" ]]; then
+	. $INC_DIR/daemons.log.inc
+fi
 
 CMD=$1
 if [[ -z "$CMD" ]] ; then
@@ -37,10 +40,10 @@ else
 fi
 # echo "# Queued Command $CMD for port $PORT"
 #cat $XDIR/sensei_commands.queue |$DIR/tools/ts "# $PORT queue: "
-if [[ ! -f $XDIR/sensei_commands.log ]]; then
-	>$XDIR/sensei_commands.log
-fi
 if [ "$3" != "-b" ]; then
+	if [[ ! -f $XDIR/sensei_commands.log ]]; then
+		>$XDIR/sensei_commands.log
+	fi
 	IFS=$'\n'
 	start_s=$(date '+%s')
 	while read -r -t $EXT_COMMAND_RESPONSE_TIMEOUT resp_line; do

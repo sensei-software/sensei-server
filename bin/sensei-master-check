@@ -15,12 +15,29 @@
 . $INC_DIR/port.parsing.inc "$1"
 
 # Main
-echo "# Checking port: $PORT"
+echo "# Checking port: $PORT ($DEV_NAME)"
 pid=$($DIR/sensei-ps "sensei-master $PORT" -p | head -1)
 if [ -z "$pid" ]; then
-	echo -e "# SenseiMaster NOT RUNNING for $PORT"
+	echo -e "# SenseiMaster NOT RUNNING for $PORT" >&2
 	exit 1
 else
 	echo -e "# SenseiMaster ALIVE for $PORT = PID: $pid"
-	exit 0
+
+	# Checking frozen
+	if [[ $2 != "-nf" ]]; then
+		last_line=$(tail -n 1 $XDIR/sensei_commands.log )
+		last_val=$( echo "$last_line" | cut -d '=' -f 3 | tr -d " :blank:\n\r")
+		last_val_d=$( echo "$last_line" | cut -d '=' -f 1 | sed s/\s$// )
+		#echo -e $last_line
+		if date -d "$last_val_d" >/dev/null; then last_val_s=$(date -d "$last_val_d" '+%s'); else last_val_s="$last_val_s"; fi
+		now_s=$(date '+%s')
+		elapsed=$(( $now_s-$last_val_s ))
+
+		echo "# Last entry for $PORT: $elapsed s ago"
+		if [ $elapsed -ge $SENSEI_MASTER_FROZEN_TIME ]; then
+			echo -e "# SenseiMaster FROZEN for $PORT" >&2
+			exit 2
+		fi
+	fi
+		exit 0
 fi

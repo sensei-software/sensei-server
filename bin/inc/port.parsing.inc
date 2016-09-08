@@ -30,7 +30,8 @@ else
 fi
 PORT="$PORT_PATH"
 XDIR="$DEV_DIR/$PORT_NAME"
-DEV_NAME="$( ls -lda $DEV_DIR/* | grep $PORT_NAME | grep '>' | cut -d ' ' -f 12  | sed 's/.*\/\(.*\)/\1/gi' )"
+# DEV_NAME="$( ls -lda $DEV_DIR/* 2>/dev/null | grep -Po "/\K(.*)(?<= -> $PORT_NAME)"  | cut -d ' ' -f 1 ) "
+DEV_NAME="$( cat $XDIR/sensei.name 2>/dev/null)"
 
 if [[ ! -d "$XDIR" ]]; then
   echo "# Port $PORT working dir not existing."
