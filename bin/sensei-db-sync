@@ -49,7 +49,7 @@ while true; do
 					Unit,
 					AVG(Value)
 				FROM sensors_values
-					WHERE  DateField>(FLOOR(((NOW( )-INTERVAL 1 MINUTE)+0)/100)*100)
+					WHERE  DateField>=(FLOOR(((NOW( )-INTERVAL 1 MINUTE)+0)/100)*100)
 					AND  DateField<(FLOOR((NOW( )+0)/100)*100)
 				GROUP BY FLOOR(DateField/100)*100 , SensorName, Measure, Unit ;
 		" >&5
@@ -76,7 +76,7 @@ while true; do
 					Unit,
 					AVG(Value)
 				FROM sensors_values_m
-					WHERE  DateField>(FLOOR(((NOW( )-INTERVAL 1 HOUR)+0)/10000)*10000)
+					WHERE  DateField>=(FLOOR(((NOW( )-INTERVAL 1 HOUR)+0)/10000)*10000)
 					AND  DateField<(FLOOR((NOW( )+0)/10000)*10000)
 				GROUP BY FLOOR(DateField/10000)*10000 , SensorName, Measure, Unit ;
 			" >&5

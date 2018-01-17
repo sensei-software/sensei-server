@@ -16,9 +16,9 @@
 . $INC_DIR/port.parsing.inc "$2"
 
 # Logging enabled only in DEBUG mode
-if [[ "$DEBUG_MODE" == "on" ]]; then
+#if [[ "$DEBUG_MODE" == "on" ]]; then
 	. $INC_DIR/daemons.log.inc
-fi
+#fi
 
 CMD=$1
 if [[ -z "$CMD" ]] ; then

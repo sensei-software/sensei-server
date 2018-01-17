@@ -92,6 +92,10 @@ while true; do
     ports="$($DIR/sensei-port -a)"
     for port in $ports; do
       $DIR/sensei-master-check $port
+      if [[ $? == 1 ]]; then
+        echo "PORT $port has no Master.  Starting..."
+        $DIR/sensei-master-start $port &
+      fi
       if [[ $? == 2 ]]; then
         echo "PORT $port is FROZEN restarting..."
         $DIR/sensei-master-restart $port &

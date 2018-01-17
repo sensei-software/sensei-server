@@ -26,7 +26,8 @@ if [[ -z "$SENSEI_DB_PASS" ]]; then
 else
 	PASS_ARG="-p$SENSEI_DB_PASS"
 fi
-exec 5> >(mysql --force -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
+#exec 5> >(mysql --force -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
+exec 5> >(mysql -D $SENSEI_DB_NAME -u $SENSEI_DB_NAME $PASS_ARG)
 
 # Main
 . $INC_DIR/port.open.inc "$PORT_PATH"

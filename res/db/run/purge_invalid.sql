@@ -4,6 +4,7 @@ DELETE FROM sensors_values
 		IFNULL(Value,'') = ''
 		OR IFNULL(Measure,'') = ''
 		OR Measure LIKE  '% %'
+		OR Measure LIKE  '%(%'
 		OR IFNULL(SensorName,'') = ''
 		OR SensorName LIKE  '% %'
 		OR SensorName LIKE  '>%'

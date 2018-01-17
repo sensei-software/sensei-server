@@ -1,4 +1,4 @@
-	#!/bin/bash
+#!/bin/bash
 DIR="/home/sensei/sensei/sensei-server/bin"
 
 $DIR/sensei-cmd "RGB 255 0 0" Icons -b
