@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR="/home/sensei/sensei/sensei-server/bin"
+DIR="/home/sensei/sensei-server/bin"
 
 THRESHOLD="0.00"
 PRECISION="_m"

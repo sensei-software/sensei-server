@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR="/home/sensei/sensei/sensei-server/bin"
+DIR="/home/sensei/sensei-server/bin"
 
 resp="$(curl -s 'http://api.apixu.com/v1/current.json?key=164401c7fc014b9cb3f211540160409&q=Palermo' )"
 
